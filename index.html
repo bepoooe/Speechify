@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speechify - Voice Processing App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2463EB;
+            --primary-dark: #1a56db;
+            --secondary: #3B82F6;
+            --light: #EFF6FF;
+            --dark: #1E3A8A;
+            --text: #1F2937;
+            --success: #10B981;
+            --danger: #EF4444;
+            --animation-speed: 0.3s;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #DBEAFE, #EFF6FF);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text);
+            overflow-x: hidden;
+        }        #app {
+            text-align: center;
+            background: white;
+            border-radius: 16px;
+            padding: 30px 20px;
+            box-shadow: 0 10px 25px rgba(36, 99, 235, 0.15);
+            width: 90%;
+            max-width: 550px;
+            font-size: 16px;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        #app:hover {
+            box-shadow: 0 15px 30px rgba(36, 99, 235, 0.2);
+        }
+
+        h1 {
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+            animation: slideDown 0.5s ease-out forwards;
+        }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #6B7280;
+            animation: fadeIn 0.7s ease-out forwards;
+        }
+
+        .logo {
+            margin-bottom: 10px;
+            animation: pulse 1s ease-in-out infinite alternate;
+        }
+
+        .logo i {
+            font-size: 48px;
+            color: var(--primary);
+        }        textarea {
+            width: calc(100% - 32px);
+            height: 180px;
+            margin: 20px auto;
+            padding: 16px;
+            font-size: 16px;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            resize: none;
+            outline: none;
+            transition: all 0.4s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) inset;
+            background-color: #FAFAFA;
+            color: #4B5563;
+            animation: scaleIn 0.5s ease-out forwards;
+            box-sizing: border-box;
+        }
+
+        textarea:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            background-color: white;
+        }
+
+        textarea::placeholder {
+            color: #9CA3AF;
+        }
+
+        .speech-container {
+            position: relative;
+            width: 100%;
+            margin: 25px 0;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }        .btn-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 25px 0 15px 0;
+            animation: slideUp 0.5s ease-out forwards;
+            padding: 0 10px;
+        }        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 120px;
+            position: relative;
+            overflow: hidden;
+            flex-grow: 1;
+            flex-basis: 0;
+            max-width: 160px;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        button:hover::before {
+            transform: translateX(0);
+        }
+
+        button i {
+            margin-right: 10px;
+            transition: transform 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        button.animate {
+            animation: buttonPulse 0.4s forwards;
+        }
+
+        #activate-mic {
+            background: var(--primary);
+            color: white;
+        }
+
+        #activate-mic:hover {
+            background: var(--primary-dark);
+        }
+
+        #speak {
+            background: var(--success);
+            color: white;
+        }
+
+        #save {
+            background: var(--secondary);
+            color: white;
+        }        #clear {
+            background: var(--light);
+            color: var(--dark);
+            border: 1px solid #E5E7EB;
+            margin: 5px auto 0 auto;
+            max-width: 180px;
+            min-width: 140px;
+            flex-grow: 0;
+        }        .status {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            top: 100%;
+            margin: 10px 0;
+            padding: 10px 20px;
+            border-radius: 8px;
+            background: var(--light);
+            color: var(--dark);
+            font-weight: 500;
+            display: none;
+            width: max-content;
+            z-index: 100;
+            opacity: 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+        }
+
+        .status.active {
+            display: block;
+            animation: fadeInUp 0.5s forwards;
+        }
+
+        .status.fade-out {
+            animation: fadeOutDown 0.5s forwards;
+        }
+        
+        .confirmation-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .confirmation-dialog.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .dialog-content {
+            background-color: #1E293B;
+            color: white;
+            padding: 20px 25px;
+            border-radius: 12px;
+            max-width: 90%;
+            width: 340px;
+            text-align: center;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .confirmation-dialog.active .dialog-content {
+            transform: scale(1);
+        }
+        
+        .dialog-content p {
+            margin: 10px 0 20px;
+            color: #CBD5E1;
+        }
+        
+        .dialog-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .dialog-buttons button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            min-width: 100px;
+            margin: 0;
+        }
+        
+        .btn-confirm {
+            background-color: #7DD3FC;
+            color: #0C4A6E;
+            border: none;
+        }
+        
+        .btn-cancel {
+            background-color: transparent;
+            color: white;
+            border: 1px solid #475569;
+        }
+        
+        .animated-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background-color: rgba(15, 23, 42, 0.85);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-width: 90%;
+            text-align: center;
+        }
+        
+        .animated-message.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .message-icon {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: inline-block;
+            animation: messageIconAnim 1s ease forwards;
+        }
+        
+        @keyframes messageIconAnim {
+            0% { transform: scale(0); }
+            40% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        @keyframes fadeOutDown {
+            from { opacity: 1; transform: translateX(-50%) translateY(0); }
+            to { opacity: 0; transform: translateX(-50%) translateY(20px); }
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        @keyframes buttonPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        #footer {
+            margin-top: 25px;
+            font-size: 14px;
+            color: #6B7280;
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        #footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        #footer a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }    </style>
+</head>
+<body>    <div id="app">
+        <div class="logo">
+            <i class="fas fa-microphone-alt"></i>
+        </div>
+        <h1>Speechify</h1>
+        <p>Your personal voice assistant</p>
+        
+        <div class="speech-container">
+            <textarea id="text" placeholder="Your recognized speech will appear here..."></textarea>
+            <div class="status" id="status-message"></div>
+        </div>
+        
+        <div class="btn-container">
+            <button id="activate-mic"><i class="fas fa-microphone"></i>Record</button>
+            <button id="speak"><i class="fas fa-volume-up"></i>Speak</button>
+            <button id="save"><i class="fas fa-save"></i>Save</button>
+        </div>
+        
+        <button id="clear"><i class="fas fa-trash"></i>Clear</button>
+        
+        <div id="footer">
+            <p>Powered by Speechify - <a href="https://example.com" target="_blank">Learn More</a></p>
+        </div>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <div class="confirmation-dialog" id="clear-confirmation">
+        <div class="dialog-content">
+            <h3>Clear Text</h3>
+            <p>Are you sure you want to clear the text?</p>
+            <div class="dialog-buttons">
+                <button class="btn-cancel" id="cancel-clear">Cancel</button>
+                <button class="btn-confirm" id="confirm-clear">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Animated Messages -->
+    <div class="animated-message" id="success-message">
+        <div class="message-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="message-text">Action completed successfully!</div>
+    </div><script>
+        const textArea = document.getElementById('text');
+        const statusMessage = document.getElementById('status-message');
+        let recognition;
+          // Function to show animated status messages
+        function showStatus(message, isError = false) {
+            // Remove any existing animation classes
+            statusMessage.classList.remove('active', 'fade-out');
+            
+            // Force a reflow to ensure animations work properly
+            void statusMessage.offsetWidth;
+            
+            statusMessage.textContent = message;
+            statusMessage.classList.add('active');
+            statusMessage.style.background = isError ? '#FEF2F2' : '#ECFDF5';
+            statusMessage.style.color = isError ? '#DC2626' : '#047857';
+            
+            setTimeout(() => {
+                statusMessage.classList.add('fade-out');
+                setTimeout(() => {
+                    statusMessage.classList.remove('active', 'fade-out');
+                }, 500);
+            }, 3000);
+        }
+        
+        // Function to add animation to buttons when pressed
+        function animateButton(buttonElement) {
+            buttonElement.classList.add('animate');
+            setTimeout(() => {
+                buttonElement.classList.remove('animate');
+            }, 400);
+        }        // Function to activate the microphone and recognize speech
+        document.getElementById('activate-mic').addEventListener('click', async () => {
+            const micButton = document.getElementById('activate-mic');
+            animateButton(micButton);
+            
+            if (!('speechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
+                showStatus('Speech Recognition is not supported in your browser. Please use Chrome or Edge.', true);
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            recognition.onstart = () => {
+                showStatus('Listening... Speak now!');
+                micButton.innerHTML = '<i class="fas fa-stop"></i>Stop';
+                micButton.style.background = 'var(--danger)';
+                micButton.style.animation = 'blink 1.5s infinite';
+            };
+
+            recognition.onspeechend = () => {
+                recognition.stop();
+            };
+
+            recognition.onresult = (event) => {
+                let finalTranscript = '';
+                let interimTranscript = '';
+                
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                
+                if (finalTranscript) {
+                    if (textArea.value) {
+                        textArea.value += ' ' + finalTranscript;
+                    } else {
+                        textArea.value = finalTranscript;
+                    }
+                    
+                    // Add a subtle animation to the textarea when new text appears
+                    textArea.style.animation = 'none';
+                    void textArea.offsetWidth; // Force reflow
+                    textArea.style.animation = 'scaleIn 0.3s ease';
+                }
+                
+                if (interimTranscript) {
+                    // Show interim results somewhere if needed
+                }
+            };
+
+            recognition.onerror = (event) => {
+                showStatus('Error occurred: ' + event.error, true);
+                resetMicButton();
+            };
+
+            recognition.onend = () => {
+                resetMicButton();
+                showStatus('Recording stopped');
+            };
+
+            // If recognition is already active, stop it
+            if (recognition.active) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        });        function resetMicButton() {
+            const micButton = document.getElementById('activate-mic');
+            micButton.innerHTML = '<i class="fas fa-microphone"></i>Record';
+            micButton.style.background = 'var(--primary)';
+            micButton.style.animation = 'none';
+        }
+
+        // Function to convert text to speech
+        document.getElementById('speak').addEventListener('click', () => {
+            const speakButton = document.getElementById('speak');
+            animateButton(speakButton);
+            
+            const text = textArea.value.trim();
+            if (!text) {
+                showStatus('Please enter some text to speak.', true);
+                return;
+            }
+
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+
+            const speech = new SpeechSynthesisUtterance(text);
+            
+            // Optional: Get available voices and set a better one
+            let voices = speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                // Try to find a nice English voice
+                const preferredVoice = voices.find(voice => 
+                    voice.lang.includes('en') && (voice.name.includes('Google') || voice.name.includes('Premium'))
+                ) || voices[0];
+                speech.voice = preferredVoice;
+            }
+            
+            speech.rate = 1.0;  // Speed of speech (0.1 to 10)
+            speech.pitch = 1.0; // Pitch of speech (0 to 2)
+            
+            speech.onstart = () => {
+                showStatus('Speaking...');
+                speakButton.innerHTML = '<i class="fas fa-pause"></i>Pause';
+                speakButton.style.animation = 'pulse 1.5s infinite alternate';
+            };
+            
+            speech.onend = () => {
+                speakButton.innerHTML = '<i class="fas fa-volume-up"></i>Speak';
+                speakButton.style.animation = 'none';
+                showStatus('Finished speaking');
+            };
+            
+            window.speechSynthesis.speak(speech);
+        });        // Function to show animated message
+        function showAnimatedMessage(message, icon = 'check-circle', duration = 2000) {
+            const messageElement = document.getElementById('success-message');
+            const iconElement = messageElement.querySelector('.message-icon i');
+            const textElement = messageElement.querySelector('.message-text');
+            
+            // Set message and icon
+            textElement.textContent = message;
+            iconElement.className = `fas fa-${icon}`;
+            
+            // Show message with animation
+            messageElement.classList.add('active');
+            
+            // Hide after duration
+            setTimeout(() => {
+                messageElement.classList.remove('active');
+            }, duration);
+        }
+
+        // Function to save text to a file
+        document.getElementById('save').addEventListener('click', () => {
+            const saveButton = document.getElementById('save');
+            animateButton(saveButton);
+            
+            const text = textArea.value.trim();
+            if (!text) {
+                showStatus('Please enter some text to save.', true);
+                return;
+            }
+
+            const filename = prompt('Enter filename (without extension):', 'speechify_text');
+            if (!filename) return;
+
+            const blob = new Blob([text], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${filename}.txt`;
+            
+            // Add animation before saving
+            saveButton.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>Saving';
+            
+            setTimeout(() => {
+                link.click();
+                saveButton.innerHTML = '<i class="fas fa-check"></i>Saved!';
+                
+                // Show animated message instead of status
+                showAnimatedMessage(`Saved as ${filename}.txt`, 'file-download');
+                
+                setTimeout(() => {
+                    saveButton.innerHTML = '<i class="fas fa-save"></i>Save';
+                }, 1500);
+            }, 500);
+        });
+        
+        // Show confirmation dialog for clearing text
+        document.getElementById('clear').addEventListener('click', () => {
+            const clearButton = document.getElementById('clear');
+            animateButton(clearButton);
+            
+            if (textArea.value.trim()) {
+                // Show custom confirmation dialog instead of browser's confirm
+                const dialog = document.getElementById('clear-confirmation');
+                dialog.classList.add('active');
+                
+                // Handle dialog buttons
+                document.getElementById('cancel-clear').onclick = () => {
+                    dialog.classList.remove('active');
+                };
+                
+                document.getElementById('confirm-clear').onclick = () => {
+                    dialog.classList.remove('active');
+                    
+                    // Add a fade-out animation to the text before clearing
+                    textArea.style.transition = 'opacity 0.3s';
+                    textArea.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        textArea.value = '';
+                        textArea.style.opacity = '1';
+                        
+                        // Show animated message
+                        showAnimatedMessage('Text cleared successfully', 'trash-alt');
+                    }, 300);
+                };
+            } else {
+                showAnimatedMessage('Nothing to clear', 'info-circle');
+            }
+        });
+        
+        // Initialize voices for speech synthesis
+        window.speechSynthesis.onvoiceschanged = () => {
+            speechSynthesis.getVoices();
+        };
+    </script>
+</body>
+</html>
