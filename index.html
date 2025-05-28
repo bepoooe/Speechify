@@ -238,18 +238,18 @@
             opacity: 1;
             visibility: visible;
         }
-        
-        .dialog-content {
-            background-color: #1E293B;
+          .dialog-content {
+            background-color: #1E40AF;
             color: white;
             padding: 20px 25px;
             border-radius: 12px;
             max-width: 90%;
             width: 340px;
             text-align: center;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 15px 30px rgba(37, 99, 235, 0.3);
             transform: scale(0.9);
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .confirmation-dialog.active .dialog-content {
@@ -258,7 +258,7 @@
         
         .dialog-content p {
             margin: 10px 0 20px;
-            color: #CBD5E1;
+            color: #DBEAFE;
         }
         
         .dialog-buttons {
@@ -276,23 +276,22 @@
         }
         
         .btn-confirm {
-            background-color: #7DD3FC;
-            color: #0C4A6E;
+            background-color: #3B82F6;
+            color: white;
             border: none;
         }
         
         .btn-cancel {
             background-color: transparent;
             color: white;
-            border: 1px solid #475569;
+            border: 1px solid #93C5FD;
         }
-        
-        .animated-message {
+          .animated-message {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0.8);
-            background-color: rgba(15, 23, 42, 0.85);
+            background-color: rgba(30, 58, 138, 0.95);
             color: white;
             padding: 15px 25px;
             border-radius: 12px;
@@ -301,9 +300,10 @@
             visibility: hidden;
             transition: all 0.4s;
             backdrop-filter: blur(4px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 25px rgba(36, 99, 235, 0.25);
             max-width: 90%;
             text-align: center;
+            border: 1px solid rgba(147, 197, 253, 0.2);
         }
         
         .animated-message.active {
@@ -317,6 +317,7 @@
             margin-bottom: 10px;
             display: inline-block;
             animation: messageIconAnim 1s ease forwards;
+            color: #60A5FA;
         }
         
         @keyframes messageIconAnim {
