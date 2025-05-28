@@ -498,10 +498,12 @@
     <div class="animated-message" id="success-message">
         <div class="message-icon"><i class="fas fa-check-circle"></i></div>
         <div class="message-text">Action completed successfully!</div>
-    </div><script>
-        const textArea = document.getElementById('text');
+    </div><script>        const textArea = document.getElementById('text');
         const statusMessage = document.getElementById('status-message');
         let recognition;
+        // Variables to track speech recognition state
+        let lastFinalTranscript = '';
+        let lastResultIndex = 0;
           // Function to show animated status messages
         function showStatus(message, isError = false) {
             // Remove any existing animation classes
@@ -543,24 +545,25 @@
             recognition = new SpeechRecognition();
             recognition.lang = 'en-US';
             recognition.continuous = true;
-            recognition.interimResults = true;
-
-            recognition.onstart = () => {
+            recognition.interimResults = true;            recognition.onstart = () => {
                 showStatus('Listening... Speak now!');
                 micButton.innerHTML = '<i class="fas fa-stop"></i>Stop';
                 micButton.style.background = 'var(--danger)';
                 micButton.style.animation = 'blink 1.5s infinite';
+                
+                // Reset tracking variables for the new session
+                lastFinalTranscript = '';
+                lastResultIndex = 0;
             };
 
             recognition.onspeechend = () => {
                 recognition.stop();
-            };
-
-            recognition.onresult = (event) => {
+            };            recognition.onresult = (event) => {
                 let finalTranscript = '';
                 let interimTranscript = '';
                 
-                for (let i = event.resultIndex; i < event.results.length; i++) {
+                // Process only from the last processed index to avoid duplication
+                for (let i = lastResultIndex; i < event.results.length; i++) {
                     if (event.results[i].isFinal) {
                         finalTranscript += event.results[i][0].transcript;
                     } else {
@@ -568,21 +571,23 @@
                     }
                 }
                 
-                if (finalTranscript) {
-                    if (textArea.value) {
-                        textArea.value += ' ' + finalTranscript;
-                    } else {
-                        textArea.value = finalTranscript;
+                // Update the last processed index to avoid duplication in future events
+                if (event.results.length > 0) {
+                    lastResultIndex = event.results.length - 1;
+                    // Only update if the final transcript has changed
+                    if (finalTranscript && finalTranscript !== lastFinalTranscript) {
+                        lastFinalTranscript = finalTranscript;
+                        if (textArea.value) {
+                            textArea.value += ' ' + finalTranscript;
+                        } else {
+                            textArea.value = finalTranscript;
+                        }
+                        
+                        // Add a subtle animation to the textarea when new text appears
+                        textArea.style.animation = 'none';
+                        void textArea.offsetWidth; // Force reflow
+                        textArea.style.animation = 'scaleIn 0.3s ease';
                     }
-                    
-                    // Add a subtle animation to the textarea when new text appears
-                    textArea.style.animation = 'none';
-                    void textArea.offsetWidth; // Force reflow
-                    textArea.style.animation = 'scaleIn 0.3s ease';
-                }
-                
-                if (interimTranscript) {
-                    // Show interim results somewhere if needed
                 }
             };
 
