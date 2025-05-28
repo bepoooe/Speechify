@@ -977,8 +977,7 @@
                 transform: translate(-50%, -50%) scale(1);
             }
         }
-        
-        @keyframes settingsDisappear {
+          @keyframes settingsDisappear {
             from {
                 opacity: 1;
                 transform: translate(-50%, -50%) scale(1);
@@ -987,27 +986,33 @@
                 opacity: 0;
                 transform: translate(-50%, -50%) scale(0.9);
                 visibility: hidden;
-            }
-        }
+            }        }
     </style>
 </head>
-<body>    <div id="app">
+<body><div id="app">
         <div class="logo">
             <i class="fas fa-microphone-alt"></i>
-        </div>
-        <h1>Speechify</h1>
+        </div>        <h1>Speechify</h1>
         <p>Your personal voice assistant</p>
+          <!-- Browser Compatibility Warning -->
+        <div id="browser-warning" style="display:none; margin: 10px 0; padding: 10px; background-color: #FEF2F2; color: #DC2626; border-radius: 8px; border: 1px solid #FCA5A5; text-align: center;">
+            <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+            <span>Your browser doesn't fully support speech recognition. For best results, please use Chrome or Edge.</span>
+            <div style="margin-top: 8px;">
+                <a href="https://www.google.com/chrome/" target="_blank" style="color: #2563EB; text-decoration: underline; margin-right: 10px;">Get Chrome</a>
+                <a href="https://www.microsoft.com/edge" target="_blank" style="color: #2563EB; text-decoration: underline;">Get Edge</a>
+            </div>
+        </div>
         
         <div class="speech-container">
             <textarea id="text" placeholder="Your recognized speech will appear here..."></textarea>
             <div class="status" id="status-message"></div>
         </div>
-        
-        <div class="btn-container">
+          <div class="btn-container">
             <button id="activate-mic" title="Start/stop speech recognition"><i class="fas fa-microphone"></i>Record</button>
             <button id="speak" title="Speak the text"><i class="fas fa-volume-up"></i>Speak</button>
             <button id="save" title="Save text to a file"><i class="fas fa-save"></i>Save</button>
-        </div>        <button id="clear" title="Clear the text area"><i class="fas fa-trash"></i>Clear</button>
+        </div><button id="clear" title="Clear the text area"><i class="fas fa-trash"></i>Clear</button>
           <button id="settings-toggle" class="settings-btn" title="Open settings">
             <i class="fas fa-cog"></i>
         </button>
@@ -1082,9 +1087,10 @@
         </div>
     </div>
 
-    <!-- Animated Messages -->
-    <div class="animated-message" id="success-message">
+    <!-- Animated Messages -->    <div class="animated-message" id="success-message">
         <div class="message-icon"><i class="fas fa-check-circle"></i></div>
-        <div class="message-text">Action completed successfully!</div>    </div>    <script src="fixed_script.js"></script>
+        <div class="message-text">Action completed successfully!</div>    </div>    
+    <script src="debug.js"></script>
+    <script src="enhanced_script.js"></script>
 </body>
 </html>
