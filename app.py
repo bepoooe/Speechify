@@ -3,7 +3,7 @@ from flask_cors import CORS
 import pyttsx3
 import os
 
-app = Flask(_name_)
+app = Flask(__name__)
 CORS(app)  # Enable Cross-Origin Resource Sharing
 
 UPLOAD_FOLDER = 'saved_files'
@@ -60,5 +60,5 @@ def download(filename):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     app.run(debug=True)

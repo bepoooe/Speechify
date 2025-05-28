@@ -224,41 +224,51 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(30, 64, 175, 0.2);
+            backdrop-filter: blur(4px);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         
         .confirmation-dialog.active {
             opacity: 1;
             visibility: visible;
         }
-          .dialog-content {
-            background-color: #1E40AF;
-            color: white;
-            padding: 20px 25px;
-            border-radius: 12px;
-            max-width: 90%;
-            width: 340px;
+
+        .dialog-content {
+            background-color: white;
+            color: var(--text);
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 400px;
+            width: 90%;
             text-align: center;
-            box-shadow: 0 15px 30px rgba(37, 99, 235, 0.3);
-            transform: scale(0.9);
+            transform: scale(0.95);
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            box-shadow: 0 15px 35px rgba(30, 64, 175, 0.15);
         }
         
         .confirmation-dialog.active .dialog-content {
             transform: scale(1);
         }
         
+        .dialog-content h3 {
+            color: var(--dark);
+            font-size: 1.5rem;
+            margin: 0 0 10px 0;
+        }
+        
         .dialog-content p {
-            margin: 10px 0 20px;
-            color: #DBEAFE;
+            margin: 10px 0 25px;
+            color: var(--text);
+            font-size: 1rem;
+            line-height: 1.5;
         }
         
         .dialog-buttons {
@@ -268,42 +278,59 @@
         }
         
         .dialog-buttons button {
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 12px 24px;
+            border-radius: 10px;
             font-weight: 600;
-            min-width: 100px;
+            min-width: 120px;
             margin: 0;
+            font-size: 0.95rem;
         }
         
         .btn-confirm {
-            background-color: #3B82F6;
+            background-color: var(--primary);
             color: white;
             border: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .btn-confirm:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 64, 175, 0.2);
         }
         
         .btn-cancel {
-            background-color: transparent;
-            color: white;
-            border: 1px solid #93C5FD;
+            background-color: var(--light);
+            color: var(--dark);
+            border: 1px solid #E5E7EB;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-          .animated-message {
+
+        .btn-cancel:hover {
+            background-color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 64, 175, 0.1);
+        }
+
+        .animated-message {
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(0.8);
-            background-color: rgba(30, 58, 138, 0.95);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 12px;
+            transform: translate(-50%, -50%) scale(0.95);
+            background-color: white;
+            color: var(--text);
+            padding: 20px 30px;
+            border-radius: 16px;
             z-index: 1000;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.4s;
-            backdrop-filter: blur(4px);
-            box-shadow: 0 10px 25px rgba(36, 99, 235, 0.25);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 15px 35px rgba(30, 64, 175, 0.15);
             max-width: 90%;
             text-align: center;
-            border: 1px solid rgba(147, 197, 253, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            font-weight: 500;
         }
         
         .animated-message.active {
@@ -313,17 +340,23 @@
         }
         
         .message-icon {
-            font-size: 28px;
-            margin-bottom: 10px;
+            font-size: 32px;
+            margin-bottom: 12px;
             display: inline-block;
-            animation: messageIconAnim 1s ease forwards;
-            color: #60A5FA;
+            animation: messageIconAnim 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            color: var(--primary);
+        }
+        
+        .message-text {
+            color: var(--text);
+            font-size: 1rem;
+            line-height: 1.5;
         }
         
         @keyframes messageIconAnim {
-            0% { transform: scale(0); }
-            40% { transform: scale(1.2); }
-            100% { transform: scale(1); }
+            0% { transform: scale(0) rotate(-45deg); }
+            50% { transform: scale(1.2) rotate(10deg); }
+            100% { transform: scale(1) rotate(0deg); }
         }
 
         @keyframes fadeIn {
@@ -389,6 +422,28 @@
         #footer a:hover {
             color: var(--primary-dark);
             text-decoration: underline;
+        }    .dialog-input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 10px;
+            margin: 15px 0 25px;
+            background: var(--light);
+            color: var(--text);
+            transition: all 0.3s;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .dialog-input:focus {
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .dialog-input::placeholder {
+            color: #9CA3AF;
         }    </style>
 </head>
 <body>    <div id="app">
@@ -424,6 +479,19 @@
             <div class="dialog-buttons">
                 <button class="btn-cancel" id="cancel-clear">Cancel</button>
                 <button class="btn-confirm" id="confirm-clear">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filename Input Dialog -->
+    <div class="confirmation-dialog" id="filename-dialog">
+        <div class="dialog-content">
+            <h3>Save Text</h3>
+            <p>Enter a name for your file:</p>
+            <input type="text" id="filename-input" class="dialog-input" placeholder="speechify_text" value="speechify_text">
+            <div class="dialog-buttons">
+                <button class="btn-cancel" id="cancel-save">Cancel</button>
+                <button class="btn-confirm" id="confirm-save">Save</button>
             </div>
         </div>
     </div>
@@ -615,28 +683,61 @@
                 return;
             }
 
-            const filename = prompt('Enter filename (without extension):', 'speechify_text');
-            if (!filename) return;
-
-            const blob = new Blob([text], { type: 'text/plain' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `${filename}.txt`;
+            // Show custom filename dialog
+            const dialog = document.getElementById('filename-dialog');
+            const filenameInput = document.getElementById('filename-input');
+            dialog.classList.add('active');
+            filenameInput.focus();
+            filenameInput.select();
             
-            // Add animation before saving
-            saveButton.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>Saving';
+            // Handle dialog buttons
+            document.getElementById('cancel-save').onclick = () => {
+                dialog.classList.remove('active');
+            };
             
-            setTimeout(() => {
-                link.click();
-                saveButton.innerHTML = '<i class="fas fa-check"></i>Saved!';
+            document.getElementById('confirm-save').onclick = () => {
+                let filename = filenameInput.value.trim();
                 
-                // Show animated message instead of status
-                showAnimatedMessage(`Saved as ${filename}.txt`, 'file-download');
+                if (!filename) {
+                    showStatus('Filename cannot be empty.', true);
+                    return;
+                }
+                
+                // Sanitize filename (remove invalid characters)
+                filename = filename.replace(/[<>:"/\\|?*\x00-\x1F]/g, '');
+                
+                const blob = new Blob([text], { type: 'text/plain' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `${filename}.txt`;
+                
+                // Add animation before saving
+                saveButton.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>Saving';
                 
                 setTimeout(() => {
-                    saveButton.innerHTML = '<i class="fas fa-save"></i>Save';
-                }, 1500);
-            }, 500);
+                    link.click();
+                    saveButton.innerHTML = '<i class="fas fa-check"></i>Saved!';
+                    
+                    // Show animated message instead of status
+                    showAnimatedMessage(`Saved as ${filename}.txt`, 'file-download');
+                    
+                    setTimeout(() => {
+                        saveButton.innerHTML = '<i class="fas fa-save"></i>Save';
+                        dialog.classList.remove('active');
+                        // Reset input value for next time
+                        filenameInput.value = 'speechify_text';
+                    }, 1500);
+                }, 500);
+            };
+
+            // Handle Enter key in the input field
+            filenameInput.addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('confirm-save').click();
+                } else if (e.key === 'Escape') {
+                    document.getElementById('cancel-save').click();
+                }
+            });
         });
         
         // Show confirmation dialog for clearing text
