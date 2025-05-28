@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2463EB">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%232463EB' d='M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M7,9V15H9V13H11V15H13V9H11V11H9V9H7Z'/%3E%3C/svg%3E" type="image/svg+xml">
     <title>Speechify - Voice Processing App</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">    <style>
         :root {
             --primary: #2463EB;
             --primary-dark: #1a56db;
@@ -17,8 +19,7 @@
             --danger: #EF4444;
             --animation-speed: 0.3s;
         }
-        
-        body {
+          body {
             font-family: 'Segoe UI', 'Roboto', sans-serif;
             background: linear-gradient(135deg, #DBEAFE, #EFF6FF);
             margin: 0;
@@ -29,7 +30,12 @@
             min-height: 100vh;
             color: var(--text);
             overflow-x: hidden;
-        }        #app {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            touch-action: manipulation;
+        }
+        
+        #app {
             text-align: center;
             background: white;
             border-radius: 16px;
@@ -40,6 +46,17 @@
             font-size: 16px;
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             animation: fadeIn 0.6s ease-out forwards;
+            will-change: transform, opacity;
+            transform: translateZ(0);
+            margin: auto;
+            position: relative;
+        }
+
+        @media (max-width: 480px) {
+            #app {
+                padding: 20px 15px;
+                border-radius: 12px;
+            }
         }
 
         #app:hover {
@@ -55,6 +72,12 @@
             animation: slideDown 0.5s ease-out forwards;
         }
 
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 28px;
+            }
+        }
+
         p {
             margin-top: 0;
             margin-bottom: 20px;
@@ -65,12 +88,16 @@
         .logo {
             margin-bottom: 10px;
             animation: pulse 1s ease-in-out infinite alternate;
+            will-change: transform;
+            transform: translateZ(0);
         }
 
         .logo i {
             font-size: 48px;
             color: var(--primary);
-        }        textarea {
+        }
+        
+        textarea {
             width: calc(100% - 32px);
             height: 180px;
             margin: 20px auto;
@@ -86,6 +113,16 @@
             color: #4B5563;
             animation: scaleIn 0.5s ease-out forwards;
             box-sizing: border-box;
+            will-change: transform, box-shadow;
+            transform: translateZ(0);
+        }
+
+        @media (max-width: 480px) {
+            textarea {
+                height: 150px;
+                padding: 12px;
+                font-size: 15px;
+            }
         }
 
         textarea:focus {
@@ -104,7 +141,9 @@
             margin: 25px 0;
             padding: 0 10px;
             box-sizing: border-box;
-        }        .btn-container {
+        }
+        
+        .btn-container {
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
@@ -112,7 +151,9 @@
             margin: 25px 0 15px 0;
             animation: slideUp 0.5s ease-out forwards;
             padding: 0 10px;
-        }        button {
+        }
+        
+        button {
             padding: 12px 20px;
             font-size: 16px;
             font-weight: 600;
@@ -129,9 +170,18 @@
             flex-grow: 1;
             flex-basis: 0;
             max-width: 160px;
-            will-change: transform; /* Optimization for animations */
-            -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
-            touch-action: manipulation; /* Optimization for touch */
+            will-change: transform, background-color, box-shadow;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            transform: translateZ(0);
+        }
+
+        @media (max-width: 480px) {
+            button {
+                font-size: 15px;
+                padding: 10px 16px;
+                min-width: 100px;
+            }
         }
 
         /* Optimize hover effect for non-mobile devices */
@@ -153,18 +203,18 @@
             }
 
             button:hover {
-                transform: translateY(-3px);
+                transform: translateY(-3px) translateZ(0);
                 box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
             }
         }
 
         button i {
             margin-right: 10px;
-            transform: translateZ(0); /* Hardware acceleration */
+            transform: translateZ(0);
         }
 
         button:active {
-            transform: translateY(-1px);
+            transform: translateY(-1px) translateZ(0);
         }
 
         button.animate {
@@ -188,7 +238,9 @@
         #save {
             background: var(--secondary);
             color: white;
-        }        #clear {
+        }
+        
+        #clear {
             background: var(--light);
             color: var(--dark);
             border: 1px solid #E5E7EB;
@@ -196,7 +248,9 @@
             max-width: 180px;
             min-width: 140px;
             flex-grow: 0;
-        }        .status {
+        }
+        
+        .status {
             position: absolute;
             left: 50%;
             transform: translateX(-50%) translateY(10px);
@@ -213,6 +267,8 @@
             opacity: 0;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             max-width: 90%;
+            will-change: opacity, transform;
+            transform: translateZ(0) translateX(-50%) translateY(10px);
         }
 
         .status.active {
@@ -232,6 +288,7 @@
             height: 100%;
             background-color: rgba(30, 64, 175, 0.2);
             backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -239,6 +296,8 @@
             opacity: 0;
             visibility: hidden;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            will-change: opacity, visibility;
+            transform: translateZ(0);
         }
         
         .confirmation-dialog.active {
@@ -258,6 +317,13 @@
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border: 1px solid rgba(59, 130, 246, 0.2);
             box-shadow: 0 15px 35px rgba(30, 64, 175, 0.15);
+            will-change: transform;
+        }
+        
+        @media (max-width: 480px) {
+            .dialog-content {
+                padding: 20px;
+            }
         }
         
         .confirmation-dialog.active .dialog-content {
@@ -290,6 +356,13 @@
             min-width: 120px;
             margin: 0;
             font-size: 0.95rem;
+        }
+        
+        @media (max-width: 480px) {
+            .dialog-buttons button {
+                padding: 10px 20px;
+                min-width: 100px;
+            }
         }
         
         .btn-confirm {
@@ -332,11 +405,13 @@
             visibility: hidden;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             box-shadow: 0 15px 35px rgba(30, 64, 175, 0.15);
             max-width: 90%;
             text-align: center;
             border: 1px solid rgba(59, 130, 246, 0.2);
             font-weight: 500;
+            will-change: transform, opacity;
         }
         
         .animated-message.active {
@@ -351,6 +426,7 @@
             display: inline-block;
             animation: messageIconAnim 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             color: var(--primary);
+            will-change: transform;
         }
         
         .message-text {
@@ -398,7 +474,9 @@
         @keyframes pulse {
             from { transform: scale(1); }
             to { transform: scale(1.05); }
-        }        @keyframes buttonPulse {
+        }
+        
+        @keyframes buttonPulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.03); }
             100% { transform: scale(1); }
@@ -407,22 +485,30 @@
         /* Specific mobile optimized animations */
         @media (max-width: 768px) {
             @keyframes buttonPulse {
-                0% { opacity: 1; }
-                50% { opacity: 0.8; }
-                100% { opacity: 1; }
+                0% { opacity: 1; transform: scale(1); }
+                50% { opacity: 0.8; transform: scale(1.02); }
+                100% { opacity: 1; transform: scale(1); }
+            }
+            
+            @keyframes pulse {
+                from { transform: scale(1); }
+                to { transform: scale(1.03); }
             }
         }
 
         @keyframes blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
-        }
-
-        #footer {
+        }        #footer {
             margin-top: 25px;
             font-size: 14px;
             color: #6B7280;
             animation: fadeIn 1s ease-out forwards;
+            text-align: center;
+            width: 100%;
+            padding-bottom: 10px;
+            display: block;
+            clear: both;
         }
 
         #footer a {
@@ -435,7 +521,9 @@
         #footer a:hover {
             color: var(--primary-dark);
             text-decoration: underline;
-        }    .dialog-input {
+        }
+        
+        .dialog-input {
             width: 100%;
             padding: 12px 16px;
             font-size: 16px;
@@ -453,11 +541,455 @@
             border-color: var(--primary);
             background: white;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }        .dialog-input::placeholder {
+            color: #9CA3AF;
+        }
+        
+        /* Settings panel styles */
+        .settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            min-width: unset;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            z-index: 10;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .settings-btn:hover {
+            transform: rotate(30deg);
+            background: white;
+        }
+        
+        .settings-btn i {
+            margin: 0;
+            font-size: 18px;
+        }        @keyframes slideInRight {
+            from {
+                transform: translateX(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }        .settings-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 90%;
+            max-width: 380px;
+            height: auto;
+            max-height: calc(90vh - 60px);
+            background: white;
+            box-shadow: 0 10px 25px rgba(36, 99, 235, 0.15);
+            z-index: 1000;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 30px 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            border-radius: 16px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            transform: translate(-50%, -50%) scale(0.95);
+            opacity: 0;
+            visibility: hidden;
+            animation: none;
+            will-change: transform, opacity;
+            transform-origin: center;
+            text-align: left;
+        }@media (max-width: 480px) {
+            .settings-panel {
+                width: 85%;
+                max-width: none;
+                padding: 20px;
+                border-radius: 12px;
+                max-height: 80vh;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0.95);
+            }
+            
+            .settings-panel.active {
+                transform: translate(-50%, -50%) scale(1);
+            }
+            
+            .settings-header h3 {
+                font-size: 20px;
+            }
+            
+            .settings-group {
+                padding: 12px;
+                margin-bottom: 15px;
+            }
+        }        .settings-panel.active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            visibility: visible;
+            animation: settingsAppear 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .settings-panel.closing {
+            animation: settingsDisappear 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }.settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .settings-header h3 {
+            margin: 0;
+            color: var(--primary);
+            font-size: 22px;
+            font-weight: 600;
+        }          .close-btn {
+            background: var(--light);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: var(--primary);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+            min-width: unset;
+            flex-grow: 0;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .close-btn:hover {
+            background-color: white;
+            transform: rotate(90deg);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            color: var(--primary-dark);
+        }
+        
+        .settings-content {
+            flex: 1;
+        }
+          .settings-group {
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: rgba(239, 246, 255, 0.5);
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+        
+        .settings-group:hover {
+            background-color: rgba(239, 246, 255, 0.8);
+        }
+        
+        body.dark-mode .settings-group {
+            background-color: rgba(30, 41, 59, 0.5);
+        }
+        
+        body.dark-mode .settings-group:hover {
+            background-color: rgba(30, 41, 59, 0.8);
+        }
+        
+        .settings-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--text);
+            font-weight: 500;
+        }
+        
+        .range-control {
+            display: flex;
+            align-items: center;
+        }
+          .range-control input[type="range"] {
+            flex: 1;
+            height: 5px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #E5E7EB;
+            border-radius: 5px;
+            outline: none;
+        }
+        
+        .range-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .range-control input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+        
+        .range-value {
+            margin-left: 10px;
+            min-width: 30px;
+            text-align: center;
+            color: var(--text);
+        }
+          select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            background: var(--light);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        
+        /* Toggle switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #E5E7EB;
+            transition: .4s;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .slider.round {
+            border-radius: 24px;
+        }
+        
+        .slider.round:before {
+            border-radius: 50%;
+        }
+        
+        /* Dark mode styles */
+        body.dark-mode {
+            background: linear-gradient(135deg, #1E293B, #0F172A);
+            color: #E5E7EB;
+        }
+        
+        body.dark-mode #app {
+            background: #1E293B;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        body.dark-mode h1 {
+            color: #60A5FA;
+        }
+        
+        body.dark-mode p {
+            color: #9CA3AF;
+        }
+        
+        body.dark-mode textarea {
+            background-color: #2D3748;
+            color: #E5E7EB;
+            border-color: #4B5563;
+        }
+        
+        body.dark-mode textarea:focus {
+            border-color: #60A5FA;
+            background-color: #374151;
+        }
+        
+        body.dark-mode textarea::placeholder {
+            color: #9CA3AF;
+        }
+        
+        body.dark-mode #clear {
+            background: #374151;
+            color: #E7E9EB;
+            border-color: #4B5563;
+        }        body.dark-mode .settings-panel {
+            background: #1E293B;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid #4B5563;
+        }
+        
+        body.dark-mode .settings-header {
+            border-color: #4B5563;
+        }
+        
+        body.dark-mode .settings-header h3 {
+            color: #60A5FA;
+        }
+        
+        body.dark-mode .close-btn {
+            color: #60A5FA;
+            background: #374151;
+        }
+        
+        body.dark-mode .close-btn:hover {
+            background: #1E293B;
+        }
+        
+        body.dark-mode .settings-group label {
+            color: #E5E7EB;
+        }
+          body.dark-mode select,
+        body.dark-mode .range-control input[type="range"] {
+            background: #374151;
+            border-color: #4B5563;
+            color: #E5E7EB;
+        }
+        
+        body.dark-mode .range-control input[type="range"]::-webkit-slider-thumb {
+            background: #60A5FA;
+            box-shadow: 0 0 5px rgba(96, 165, 250, 0.5);
+        }
+        
+        body.dark-mode .dialog-content {
+            background: #1E293B;
+            border-color: #4B5563;
+        }
+        
+        body.dark-mode .dialog-content h3,
+        body.dark-mode .dialog-content p {
+            color: #E5E7EB;
+        }
+        
+        body.dark-mode .btn-cancel {
+            background: #374151;
+            color: #E7E9EB;
+            border-color: #4B5563;
+        }
+        
+        body.dark-mode .animated-message {
+            background: #1E293B;
+            border-color: #4B5563;
+        }
+        
+        body.dark-mode .message-text {
+            color: #E7E9EB;
+        }
+        
+        body.dark-mode #footer {
+            color: #9CA3AF;
+        }
+        
+        body.dark-mode #footer a {
+            color: #60A5FA;
+        }
+        
+        /* Loading indicator for processing */
+        .processing {
+            position: relative;
+        }
+        
+        .processing::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            color: var(--primary);
+        }
+        
+        body.dark-mode .processing::after {
+            background: rgba(30, 41, 59, 0.7);
+        }        .settings-panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+        }
+        
+        .settings-panel-overlay.active {
+            opacity: 1;
+            visibility: visible;
         }
 
-        .dialog-input::placeholder {
-            color: #9CA3AF;
-        }    </style>
+        @keyframes settingsAppear {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+        
+        @keyframes settingsDisappear {
+            from {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.9);
+                visibility: hidden;
+            }
+        }
+    </style>
 </head>
 <body>    <div id="app">
         <div class="logo">
@@ -472,13 +1004,56 @@
         </div>
         
         <div class="btn-container">
-            <button id="activate-mic"><i class="fas fa-microphone"></i>Record</button>
-            <button id="speak"><i class="fas fa-volume-up"></i>Speak</button>
-            <button id="save"><i class="fas fa-save"></i>Save</button>
-        </div>
-          <button id="clear"><i class="fas fa-trash"></i>Clear</button>
-          <div id="footer">
+            <button id="activate-mic" title="Start/stop speech recognition"><i class="fas fa-microphone"></i>Record</button>
+            <button id="speak" title="Speak the text"><i class="fas fa-volume-up"></i>Speak</button>
+            <button id="save" title="Save text to a file"><i class="fas fa-save"></i>Save</button>
+        </div>        <button id="clear" title="Clear the text area"><i class="fas fa-trash"></i>Clear</button>
+          <button id="settings-toggle" class="settings-btn" title="Open settings">
+            <i class="fas fa-cog"></i>
+        </button>
+        
+        <div id="footer">
             <p>Made by bepoooe - <a href="https://github.com/bepoooe/Speechify" target="_blank">Learn More</a></p>
+        </div>
+    </div>
+    
+    <div class="settings-panel-overlay" id="settings-overlay"></div>
+    
+    <div id="settings-panel" class="settings-panel">
+            <div class="settings-header">
+                <h3>Settings</h3>
+                <button id="close-settings" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="settings-content">
+                <div class="settings-group">
+                    <label>Voice Speed</label>
+                    <div class="range-control">
+                        <input type="range" id="voice-speed" min="0.5" max="2" step="0.1" value="1.0">
+                        <span class="range-value">1.0</span>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <label>Voice Pitch</label>
+                    <div class="range-control">
+                        <input type="range" id="voice-pitch" min="0.5" max="2" step="0.1" value="1.0">
+                        <span class="range-value">1.0</span>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <label>Voice Selection</label>
+                    <select id="voice-select">
+                        <option value="">Default Voice</option>
+                        <!-- Voice options will be populated by JS -->
+                    </select>
+                </div>                <div class="settings-group">
+                    <label>Dark Mode</label>
+                    <label class="switch">
+                        <input type="checkbox" id="dark-mode-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>                <div class="settings-group" style="margin-top: 20px; text-align: center; background-color: transparent;">
+                    <button id="reset-settings" class="btn-cancel" style="width: 100%; border-radius: 10px; padding: 12px; font-weight: 600; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">Reset Settings</button>
+                </div>            </div>
         </div>
     </div>
 
@@ -510,329 +1085,6 @@
     <!-- Animated Messages -->
     <div class="animated-message" id="success-message">
         <div class="message-icon"><i class="fas fa-check-circle"></i></div>
-        <div class="message-text">Action completed successfully!</div>    </div>
-    <script src="optimized_script.js"></script>
-    <!-- Previous inline script removed and replaced with optimized external script -->
-            // Remove any existing animation classes
-            statusMessage.classList.remove('active', 'fade-out');
-            
-            // Force a reflow to ensure animations work properly
-            void statusMessage.offsetWidth;
-            
-            statusMessage.textContent = message;
-            statusMessage.classList.add('active');
-            statusMessage.style.background = isError ? '#FEF2F2' : '#ECFDF5';
-            statusMessage.style.color = isError ? '#DC2626' : '#047857';
-            
-            setTimeout(() => {
-                statusMessage.classList.add('fade-out');
-                setTimeout(() => {
-                    statusMessage.classList.remove('active', 'fade-out');
-                }, 500);
-            }, 3000);
-        }
-          // Function to add animation to buttons when pressed - optimized for mobile
-        function animateButton(buttonElement) {
-            // Check if button is already animating to prevent multiple animations
-            if (buttonElement.classList.contains('animate')) {
-                return;
-            }
-            
-            // Detect if device is mobile for optimized animations
-            const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
-            
-            // Use shorter, more performant animations on mobile
-            buttonElement.classList.add('animate');
-            setTimeout(() => {
-                buttonElement.classList.remove('animate');
-            }, isMobile ? 200 : 400); // Shorter animation time for mobile
-        }// Function to activate the microphone and recognize speech        // Debounce function to prevent rapid button clicks
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                const context = this;
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(context, args), wait);
-            };
-        }
-        
-        // Setup button handlers with debouncing for mobile
-        document.getElementById('activate-mic').addEventListener('click', debounce(async () => {
-            const micButton = document.getElementById('activate-mic');
-            
-            // Prevent multiple clicks
-            if (micButton.getAttribute('data-processing') === 'true') {
-                return;
-            }
-            
-            micButton.setAttribute('data-processing', 'true');
-            animateButton(micButton);
-            
-            if (!('speechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
-                showStatus('Speech Recognition is not supported in your browser. Please use Chrome or Edge.', true);
-                return;
-            }            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.lang = 'en-US';
-            
-            // For mobile devices, disable continuous mode to prevent repetition issues
-            const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
-            recognition.continuous = !isMobile; // Disable continuous mode on mobile
-            recognition.interimResults = true;            recognition.onstart = () => {
-                showStatus('Listening... Speak now!');
-                micButton.innerHTML = '<i class="fas fa-stop"></i>Stop';
-                micButton.style.background = 'var(--danger)';
-                micButton.style.animation = 'blink 1.5s infinite';
-                
-                // On mobile, we'll restart recognition when it ends
-                // because continuous mode is disabled
-                const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
-                if (isMobile) {
-                    recognition._isListening = true;
-                }
-            };
-
-            recognition.onspeechend = () => {
-                recognition.stop();
-            };            recognition.onresult = (event) => {
-                // Get the current transcript from the most recent result
-                const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
-                const currentResult = event.results[event.results.length - 1];
-                
-                // Only process final results (especially important for mobile)
-                if (currentResult.isFinal) {
-                    const transcript = currentResult[0].transcript.trim();
-                    
-                    if (transcript) {
-                        if (isMobile) {
-                            // For mobile: Just append this single result
-                            if (textArea.value) {
-                                // Add space only if the textarea already has content
-                                textArea.value += ' ' + transcript;
-                            } else {
-                                textArea.value = transcript;
-                            }
-                        } else {
-                            // For desktop: Same behavior
-                            if (textArea.value) {
-                                textArea.value += ' ' + transcript;
-                            } else {
-                                textArea.value = transcript;
-                            }
-                        }
-                        
-                        // Add a subtle animation to the textarea when new text appears
-                        textArea.style.animation = 'none';
-                        void textArea.offsetWidth; // Force reflow
-                        textArea.style.animation = 'scaleIn 0.3s ease';
-                    }
-                }
-            };
-
-            recognition.onerror = (event) => {
-                showStatus('Error occurred: ' + event.error, true);
-                resetMicButton();
-            };            recognition.onend = () => {
-                const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
-                
-                // On mobile, we need to restart recognition manually since continuous mode is disabled
-                if (isMobile && recognition._isListening) {
-                    // Start recognition again after a small delay to avoid rapid restarts
-                    setTimeout(() => {
-                        try {
-                            recognition.start();
-                        } catch (e) {
-                            // If there's an error restarting (already started or other issue)
-                            recognition._isListening = false;
-                            resetMicButton();
-                            showStatus('Recording stopped');
-                        }
-                    }, 300);
-                } else {
-                    resetMicButton();
-                    showStatus('Recording stopped');
-                }
-            };            // If recognition is already active, stop it
-            if (recognition._isListening) {
-                recognition._isListening = false; // Set flag to prevent auto-restart on mobile
-                recognition.stop();
-            } else {
-                recognition._isListening = true;
-                recognition.start();
-            }
-        });        function resetMicButton() {
-            const micButton = document.getElementById('activate-mic');
-            micButton.innerHTML = '<i class="fas fa-microphone"></i>Record';
-            micButton.style.background = 'var(--primary)';
-            micButton.style.animation = 'none';
-        }
-
-        // Function to convert text to speech
-        document.getElementById('speak').addEventListener('click', () => {
-            const speakButton = document.getElementById('speak');
-            animateButton(speakButton);
-            
-            const text = textArea.value.trim();
-            if (!text) {
-                showStatus('Please enter some text to speak.', true);
-                return;
-            }
-
-            // Cancel any ongoing speech
-            window.speechSynthesis.cancel();
-
-            const speech = new SpeechSynthesisUtterance(text);
-            
-            // Optional: Get available voices and set a better one
-            let voices = speechSynthesis.getVoices();
-            if (voices.length > 0) {
-                // Try to find a nice English voice
-                const preferredVoice = voices.find(voice => 
-                    voice.lang.includes('en') && (voice.name.includes('Google') || voice.name.includes('Premium'))
-                ) || voices[0];
-                speech.voice = preferredVoice;
-            }
-            
-            speech.rate = 1.0;  // Speed of speech (0.1 to 10)
-            speech.pitch = 1.0; // Pitch of speech (0 to 2)
-            
-            speech.onstart = () => {
-                showStatus('Speaking...');
-                speakButton.innerHTML = '<i class="fas fa-pause"></i>Pause';
-                speakButton.style.animation = 'pulse 1.5s infinite alternate';
-            };
-            
-            speech.onend = () => {
-                speakButton.innerHTML = '<i class="fas fa-volume-up"></i>Speak';
-                speakButton.style.animation = 'none';
-                showStatus('Finished speaking');
-            };
-            
-            window.speechSynthesis.speak(speech);
-        });        // Function to show animated message
-        function showAnimatedMessage(message, icon = 'check-circle', duration = 2000) {
-            const messageElement = document.getElementById('success-message');
-            const iconElement = messageElement.querySelector('.message-icon i');
-            const textElement = messageElement.querySelector('.message-text');
-            
-            // Set message and icon
-            textElement.textContent = message;
-            iconElement.className = `fas fa-${icon}`;
-            
-            // Show message with animation
-            messageElement.classList.add('active');
-            
-            // Hide after duration
-            setTimeout(() => {
-                messageElement.classList.remove('active');
-            }, duration);
-        }
-
-        // Function to save text to a file
-        document.getElementById('save').addEventListener('click', () => {
-            const saveButton = document.getElementById('save');
-            animateButton(saveButton);
-            
-            const text = textArea.value.trim();
-            if (!text) {
-                showStatus('Please enter some text to save.', true);
-                return;
-            }
-
-            // Show custom filename dialog
-            const dialog = document.getElementById('filename-dialog');
-            const filenameInput = document.getElementById('filename-input');
-            dialog.classList.add('active');
-            filenameInput.focus();
-            filenameInput.select();
-            
-            // Handle dialog buttons
-            document.getElementById('cancel-save').onclick = () => {
-                dialog.classList.remove('active');
-            };
-            
-            document.getElementById('confirm-save').onclick = () => {
-                let filename = filenameInput.value.trim();
-                
-                if (!filename) {
-                    showStatus('Filename cannot be empty.', true);
-                    return;
-                }
-                
-                // Sanitize filename (remove invalid characters)
-                filename = filename.replace(/[<>:"/\\|?*\x00-\x1F]/g, '');
-                
-                const blob = new Blob([text], { type: 'text/plain' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `${filename}.txt`;
-                
-                // Add animation before saving
-                saveButton.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>Saving';
-                
-                setTimeout(() => {
-                    link.click();
-                    saveButton.innerHTML = '<i class="fas fa-check"></i>Saved!';
-                    
-                    // Show animated message instead of status
-                    showAnimatedMessage(`Saved as ${filename}.txt`, 'file-download');
-                    
-                    setTimeout(() => {
-                        saveButton.innerHTML = '<i class="fas fa-save"></i>Save';
-                        dialog.classList.remove('active');
-                        // Reset input value for next time
-                        filenameInput.value = 'speechify_text';
-                    }, 1500);
-                }, 500);
-            };
-
-            // Handle Enter key in the input field
-            filenameInput.addEventListener('keyup', (e) => {
-                if (e.key === 'Enter') {
-                    document.getElementById('confirm-save').click();
-                } else if (e.key === 'Escape') {
-                    document.getElementById('cancel-save').click();
-                }
-            });
-        });
-        
-        // Show confirmation dialog for clearing text
-        document.getElementById('clear').addEventListener('click', () => {
-            const clearButton = document.getElementById('clear');
-            animateButton(clearButton);
-            
-            if (textArea.value.trim()) {
-                // Show custom confirmation dialog instead of browser's confirm
-                const dialog = document.getElementById('clear-confirmation');
-                dialog.classList.add('active');
-                
-                // Handle dialog buttons
-                document.getElementById('cancel-clear').onclick = () => {
-                    dialog.classList.remove('active');
-                };
-                
-                document.getElementById('confirm-clear').onclick = () => {
-                    dialog.classList.remove('active');
-                    
-                    // Add a fade-out animation to the text before clearing
-                    textArea.style.transition = 'opacity 0.3s';
-                    textArea.style.opacity = '0';
-                    
-                    setTimeout(() => {
-                        textArea.value = '';
-                        textArea.style.opacity = '1';
-                        
-                        // Show animated message
-                        showAnimatedMessage('Text cleared successfully', 'trash-alt');
-                    }, 300);
-                };
-            } else {
-                showAnimatedMessage('Nothing to clear', 'info-circle');
-            }
-        });
-        
-        // Initialize voices for speech synthesis
-        window.speechSynthesis.onvoiceschanged = () => {
-            speechSynthesis.getVoices();    
+        <div class="message-text">Action completed successfully!</div>    </div>    <script src="fixed_script.js"></script>
 </body>
 </html>
