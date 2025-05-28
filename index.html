@@ -501,8 +501,6 @@
     </div><script>        const textArea = document.getElementById('text');
         const statusMessage = document.getElementById('status-message');
         let recognition;
-        // Speech recognition state tracking
-        let processedResults = new Set();
           // Function to show animated status messages
         function showStatus(message, isError = false) {
             // Remove any existing animation classes
@@ -538,83 +536,93 @@
             if (!('speechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
                 showStatus('Speech Recognition is not supported in your browser. Please use Chrome or Edge.', true);
                 return;
-            }
-
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            }            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
             recognition.lang = 'en-US';
-            recognition.continuous = true;
+            
+            // For mobile devices, disable continuous mode to prevent repetition issues
+            const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
+            recognition.continuous = !isMobile; // Disable continuous mode on mobile
             recognition.interimResults = true;            recognition.onstart = () => {
                 showStatus('Listening... Speak now!');
                 micButton.innerHTML = '<i class="fas fa-stop"></i>Stop';
                 micButton.style.background = 'var(--danger)';
                 micButton.style.animation = 'blink 1.5s infinite';
                 
-                // Reset tracking variables for the new session with our new approach
-                processedResults = new Set();
+                // On mobile, we'll restart recognition when it ends
+                // because continuous mode is disabled
+                const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
+                if (isMobile) {
+                    recognition._isListening = true;
+                }
             };
 
             recognition.onspeechend = () => {
                 recognition.stop();
-            };            // Track the transcript buffer for this recognition session
-            let transcriptBuffer = textArea.value;
-            
-            recognition.onresult = (event) => {
-                let newText = '';
-                let resultAdded = false;
+            };            recognition.onresult = (event) => {
+                // Get the current transcript from the most recent result
+                const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
+                const currentResult = event.results[event.results.length - 1];
                 
-                // Loop through all results
-                for (let i = 0; i < event.results.length; i++) {
-                    // Create a unique ID for this result based on its content
-                    const resultText = event.results[i][0].transcript;
-                    const resultKey = `${i}-${resultText}`;
+                // Only process final results (especially important for mobile)
+                if (currentResult.isFinal) {
+                    const transcript = currentResult[0].transcript.trim();
                     
-                    // Only process this result if we haven't seen it before
-                    if (event.results[i].isFinal && !processedResults.has(resultKey)) {
-                        processedResults.add(resultKey);
-                        newText += resultText + ' ';
-                        resultAdded = true;
-                    }
-                }
-                
-                // Only update the textarea if we have new content
-                if (resultAdded && newText.trim()) {
-                    // On mobile, we'll completely replace the text instead of appending
-                    // This avoids any duplication issues
-                    if (/Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent)) {
-                        // For mobile: store in buffer first, then set the whole content
-                        transcriptBuffer += newText;
-                        textArea.value = transcriptBuffer.trim();
-                    } else {
-                        // For desktop: append new text as before
-                        if (textArea.value) {
-                            textArea.value += ' ' + newText.trim();
+                    if (transcript) {
+                        if (isMobile) {
+                            // For mobile: Just append this single result
+                            if (textArea.value) {
+                                // Add space only if the textarea already has content
+                                textArea.value += ' ' + transcript;
+                            } else {
+                                textArea.value = transcript;
+                            }
                         } else {
-                            textArea.value = newText.trim();
+                            // For desktop: Same behavior
+                            if (textArea.value) {
+                                textArea.value += ' ' + transcript;
+                            } else {
+                                textArea.value = transcript;
+                            }
                         }
+                        
+                        // Add a subtle animation to the textarea when new text appears
+                        textArea.style.animation = 'none';
+                        void textArea.offsetWidth; // Force reflow
+                        textArea.style.animation = 'scaleIn 0.3s ease';
                     }
-                    
-                    // Add a subtle animation to the textarea when new text appears
-                    textArea.style.animation = 'none';
-                    void textArea.offsetWidth; // Force reflow
-                    textArea.style.animation = 'scaleIn 0.3s ease';
                 }
             };
 
             recognition.onerror = (event) => {
                 showStatus('Error occurred: ' + event.error, true);
                 resetMicButton();
-            };
-
-            recognition.onend = () => {
-                resetMicButton();
-                showStatus('Recording stopped');
-            };
-
-            // If recognition is already active, stop it
-            if (recognition.active) {
+            };            recognition.onend = () => {
+                const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
+                
+                // On mobile, we need to restart recognition manually since continuous mode is disabled
+                if (isMobile && recognition._isListening) {
+                    // Start recognition again after a small delay to avoid rapid restarts
+                    setTimeout(() => {
+                        try {
+                            recognition.start();
+                        } catch (e) {
+                            // If there's an error restarting (already started or other issue)
+                            recognition._isListening = false;
+                            resetMicButton();
+                            showStatus('Recording stopped');
+                        }
+                    }, 300);
+                } else {
+                    resetMicButton();
+                    showStatus('Recording stopped');
+                }
+            };            // If recognition is already active, stop it
+            if (recognition._isListening) {
+                recognition._isListening = false; // Set flag to prevent auto-restart on mobile
                 recognition.stop();
             } else {
+                recognition._isListening = true;
                 recognition.start();
             }
         });        function resetMicButton() {
