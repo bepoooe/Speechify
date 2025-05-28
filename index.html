@@ -119,7 +119,7 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.2s ease-out;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -129,32 +129,38 @@
             flex-grow: 1;
             flex-basis: 0;
             max-width: 160px;
+            will-change: transform; /* Optimization for animations */
+            -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+            touch-action: manipulation; /* Optimization for touch */
         }
 
-        button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.1);
-            transform: translateX(-100%);
-            transition: transform 0.6s;
-        }
+        /* Optimize hover effect for non-mobile devices */
+        @media (hover: hover) {
+            button::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(255, 255, 255, 0.1);
+                transform: translateX(-100%);
+                transition: transform 0.4s;
+            }
 
-        button:hover::before {
-            transform: translateX(0);
+            button:hover::before {
+                transform: translateX(0);
+            }
+
+            button:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            }
         }
 
         button i {
             margin-right: 10px;
-            transition: transform 0.3s;
-        }
-
-        button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            transform: translateZ(0); /* Hardware acceleration */
         }
 
         button:active {
@@ -162,7 +168,7 @@
         }
 
         button.animate {
-            animation: buttonPulse 0.4s forwards;
+            animation: buttonPulse 0.3s forwards;
         }
 
         #activate-mic {
@@ -392,12 +398,19 @@
         @keyframes pulse {
             from { transform: scale(1); }
             to { transform: scale(1.05); }
-        }
-
-        @keyframes buttonPulse {
+        }        @keyframes buttonPulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            50% { transform: scale(1.03); }
             100% { transform: scale(1); }
+        }
+        
+        /* Specific mobile optimized animations */
+        @media (max-width: 768px) {
+            @keyframes buttonPulse {
+                0% { opacity: 1; }
+                50% { opacity: 0.8; }
+                100% { opacity: 1; }
+            }
         }
 
         @keyframes blink {
@@ -497,12 +510,9 @@
     <!-- Animated Messages -->
     <div class="animated-message" id="success-message">
         <div class="message-icon"><i class="fas fa-check-circle"></i></div>
-        <div class="message-text">Action completed successfully!</div>
-    </div><script>        const textArea = document.getElementById('text');
-        const statusMessage = document.getElementById('status-message');
-        let recognition;
-          // Function to show animated status messages
-        function showStatus(message, isError = false) {
+        <div class="message-text">Action completed successfully!</div>    </div>
+    <script src="optimized_script.js"></script>
+    <!-- Previous inline script removed and replaced with optimized external script -->
             // Remove any existing animation classes
             statusMessage.classList.remove('active', 'fade-out');
             
@@ -521,16 +531,41 @@
                 }, 500);
             }, 3000);
         }
-        
-        // Function to add animation to buttons when pressed
+          // Function to add animation to buttons when pressed - optimized for mobile
         function animateButton(buttonElement) {
+            // Check if button is already animating to prevent multiple animations
+            if (buttonElement.classList.contains('animate')) {
+                return;
+            }
+            
+            // Detect if device is mobile for optimized animations
+            const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
+            
+            // Use shorter, more performant animations on mobile
             buttonElement.classList.add('animate');
             setTimeout(() => {
                 buttonElement.classList.remove('animate');
-            }, 400);
-        }        // Function to activate the microphone and recognize speech
-        document.getElementById('activate-mic').addEventListener('click', async () => {
+            }, isMobile ? 200 : 400); // Shorter animation time for mobile
+        }// Function to activate the microphone and recognize speech        // Debounce function to prevent rapid button clicks
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+        
+        // Setup button handlers with debouncing for mobile
+        document.getElementById('activate-mic').addEventListener('click', debounce(async () => {
             const micButton = document.getElementById('activate-mic');
+            
+            // Prevent multiple clicks
+            if (micButton.getAttribute('data-processing') === 'true') {
+                return;
+            }
+            
+            micButton.setAttribute('data-processing', 'true');
             animateButton(micButton);
             
             if (!('speechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
@@ -798,8 +833,6 @@
         
         // Initialize voices for speech synthesis
         window.speechSynthesis.onvoiceschanged = () => {
-            speechSynthesis.getVoices();
-        };
-    </script>
+            speechSynthesis.getVoices();    
 </body>
 </html>
