@@ -479,8 +479,7 @@
         @keyframes buttonPulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.03); }
-            100% { transform: scale(1); }
-        }        /* Mobile-specific optimizations to prevent accidental double-taps */
+            100% { transform: scale(1); }        }        /* Mobile-specific optimizations to prevent accidental double-taps */
         @media (max-width: 768px) {
             /* Reduce animation intensity on mobile to prevent visual feedback that encourages multiple taps */
             @keyframes buttonPulse {
@@ -493,37 +492,14 @@
                 from { transform: scale(1); }
                 to { transform: scale(1.02); }
             }
-
-            /* Add touch-specific delay for speech button to prevent repetition */
-            #speak {
-                -webkit-tap-highlight-color: transparent;
-                -webkit-touch-callout: none;
-                -webkit-user-select: none;
-                -khtml-user-select: none;
-                -moz-user-select: none;
-                -ms-user-select: none;
-                user-select: none;
-                pointer-events: auto;
-            }
-
-            /* Prevent multiple rapid taps by adding a slight delay on active state */
-            #speak:active {
-                transform: scale(0.98) translateZ(0);
-                transition: transform 0.1s ease;
-            }
-
-            /* Ensure button processing state is visually distinct on mobile */
-            #speak[data-processing="true"] {
-                opacity: 0.7;
-                pointer-events: none;
-                transform: scale(0.98);
-            }
         }
 
         @keyframes blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
-        }        #footer {
+        }
+
+        #footer {
             margin-top: 25px;
             font-size: 14px;
             color: #6B7280;
@@ -1059,9 +1035,7 @@
         .settings-panel-overlay.active {
             opacity: 1;
             visibility: visible;
-        }
-
-        @keyframes settingsAppear {
+        }        @keyframes settingsAppear {
             from {
                 opacity: 0;
                 transform: translate(-50%, -50%) scale(0.9);
@@ -1071,7 +1045,8 @@
                 transform: translate(-50%, -50%) scale(1);
             }
         }
-          @keyframes settingsDisappear {
+
+        @keyframes settingsDisappear {
             from {
                 opacity: 1;
                 transform: translate(-50%, -50%) scale(1);
@@ -1080,7 +1055,8 @@
                 opacity: 0;
                 transform: translate(-50%, -50%) scale(0.9);
                 visibility: hidden;
-            }        }
+            }
+        }
     </style>
 </head>
 <body><div id="app">
