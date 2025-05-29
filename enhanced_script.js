@@ -53,16 +53,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Detect if device is mobile
     const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
+
     // Mobile-specific variables for speech protection
     let mobileLastSpeechTime = 0;
     let mobileRecentSpeeches = [];
     let mobileSpeechBlocked = false;
 
+    // Mobile-specific variables for speech recognition duplicate protection
+    let mobileLastRecognitionTime = 0;
+    let mobileRecentTranscripts = [];
+    let mobileRecognitionCooldown = false;
+
     // Mobile-specific global protection
     if (isMobile) {
         console.log('Mobile device detected - enabling enhanced speech protection');
-        
+
         // Force cleanup function for mobile devices
         window.forceSpeechCleanup = () => {
             console.log('Mobile: Force cleanup initiated');
@@ -71,11 +76,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 speechSynthesisActive = false;
                 currentSpeech = null;
                 mobileSpeechBlocked = false;
-                
+
                 // Clear mobile tracking
                 mobileLastSpeechTime = 0;
                 mobileRecentSpeeches = [];
-                
+
+                // Clear mobile recognition tracking
+                mobileLastRecognitionTime = 0;
+                mobileRecentTranscripts = [];
+                mobileRecognitionCooldown = false;
+
                 const speakBtn = document.getElementById('speak');
                 if (speakBtn) {
                     resetSpeakButton(speakBtn);
@@ -87,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Mobile: Error during force cleanup:', e);
             }
         };
-        
+
         // Monitor for stuck speech synthesis on mobile
         setInterval(() => {
             if (speechSynthesisActive && !window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
@@ -95,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.forceSpeechCleanup();
             }
         }, 1000);
-        
+
         // Add visibility change handler for mobile to stop speech when app is backgrounded
         document.addEventListener('visibilitychange', () => {
             if (document.hidden && speechSynthesisActive) {
@@ -103,18 +113,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.forceSpeechCleanup();
             }
         });
-        
+
         // Add touch event handlers to detect when user might be frantically tapping
         let tapCount = 0;
         let tapTimer = null;
-        
+
         document.addEventListener('touchstart', () => {
             tapCount++;
-            
+
             if (tapTimer) {
                 clearTimeout(tapTimer);
             }
-            
+
             tapTimer = setTimeout(() => {
                 if (tapCount > 3) {
                     console.log('Mobile: Rapid tapping detected, performing cleanup');
@@ -132,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 cursor: not-allowed !important;
                 position: relative;
             }
-            
+
             .mobile-device #speak[data-mobile-blocked]::after {
                 content: "⏳";
                 position: absolute;
@@ -141,11 +151,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 transform: translateY(-50%);
                 font-size: 14px;
             }
-            
+
             .mobile-device #speak[data-processing] {
                 animation: mobileProcessing 1s infinite alternate;
             }
-            
+
             @keyframes mobileProcessing {
                 0% { box-shadow: 0 0 5px rgba(220, 38, 38, 0.3); }
                 100% { box-shadow: 0 0 15px rgba(220, 38, 38, 0.7); }
@@ -432,8 +442,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const transcript = currentResult[0].transcript.trim();
             console.log('Final transcript:', transcript);
 
-            // Only add if transcript is not empty and different from last recognized text
+            // Basic validation: check if transcript is not empty and different from last recognized text
             if (transcript && transcript !== recognition._lastRecognizedText) {
+
+                // Apply mobile-specific duplicate protection
+                if (isMobile && !canAddMobileTranscript(transcript)) {
+                    console.log('Mobile: Skipping duplicate or too-frequent transcript');
+                    return;
+                }
+
                 console.log('Adding transcript to textarea:', transcript);
 
                 // Append text with space if needed
@@ -444,6 +461,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Update last recognized text
                 recognition._lastRecognizedText = transcript;
+
+                // Record this transcript for mobile duplicate protection
+                if (isMobile) {
+                    recordMobileTranscript(transcript);
+                }
 
                 // Add a subtle animation to the textarea when new text appears
                 textArea.style.animation = 'none';
@@ -558,6 +580,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         recognition._isListening = false;
                         resetMicButton();
 
+                        // Clear mobile recognition tracking when session ends
+                        if (isMobile) {
+                            console.log('Mobile: Clearing recognition tracking on session end');
+                            mobileLastRecognitionTime = 0;
+                            mobileRecentTranscripts = [];
+                            mobileRecognitionCooldown = false;
+                        }
+
                         // Only show "stopped" message if user explicitly stopped it
                         if (!recognition._userStopped) {
                             showStatus('Recording ended. Click Record to start again.');
@@ -591,38 +621,89 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }, 300));
 
+    // Mobile speech recognition protection functions
+    function canAddMobileTranscript(transcript) {
+        if (!isMobile) return true; // Only apply to mobile devices
+
+        const now = Date.now();
+
+        // Check if in cooldown period
+        if (mobileRecognitionCooldown) {
+            console.log('Mobile: Recognition in cooldown, skipping transcript');
+            return false;
+        }
+
+        // Time-based protection: minimum 1 second between transcript additions
+        if (now - mobileLastRecognitionTime < 1000) {
+            console.log('Mobile: Too soon since last transcript addition');
+            return false;
+        }
+
+        // Duplicate protection: check if same transcript was added recently
+        const recentDuplicate = mobileRecentTranscripts.find(recent =>
+            recent.text.toLowerCase() === transcript.toLowerCase() && (now - recent.time) < 5000
+        );
+
+        if (recentDuplicate) {
+            console.log('Mobile: Duplicate transcript detected:', transcript);
+            return false;
+        }
+
+        return true;
+    }
+
+    function recordMobileTranscript(transcript) {
+        if (!isMobile) return; // Only apply to mobile devices
+
+        const now = Date.now();
+        mobileLastRecognitionTime = now;
+        mobileRecentTranscripts.push({ text: transcript, time: now });
+
+        // Keep only last 5 transcripts for memory efficiency
+        if (mobileRecentTranscripts.length > 5) {
+            mobileRecentTranscripts = mobileRecentTranscripts.slice(-5);
+        }
+
+        // Set cooldown to prevent rapid additions
+        mobileRecognitionCooldown = true;
+        setTimeout(() => {
+            mobileRecognitionCooldown = false;
+            console.log('Mobile: Recognition cooldown ended');
+        }, 800);
+    }
+
     // Mobile speech protection functions
     function canStartMobileSpeech(textToSpeak) {
         const now = Date.now();
-        
+
         // Check if already blocked
         if (mobileSpeechBlocked) {
             console.log('Mobile: Speech blocked by global flag');
             return false;
         }
-        
+
         // Check if any speech is active
         if (window.speechSynthesis.speaking || window.speechSynthesis.pending || speechSynthesisActive) {
             console.log('Mobile: Speech already active');
             return false;
         }
-        
+
         // Time-based protection: minimum 3 seconds between speeches
         if (now - mobileLastSpeechTime < 3000) {
             console.log('Mobile: Too soon since last speech');
             return false;
         }
-        
+
         // Duplicate protection: check if same text was spoken recently
-        const recentDuplicate = mobileRecentSpeeches.find(recent => 
+        const recentDuplicate = mobileRecentSpeeches.find(recent =>
             recent.text === textToSpeak && (now - recent.time) < 30000
         );
-        
+
         if (recentDuplicate) {
             console.log('Mobile: Duplicate text detected');
             return false;
         }
-        
+
         return true;
     }
 
@@ -630,15 +711,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const now = Date.now();
         mobileLastSpeechTime = now;
         mobileRecentSpeeches.push({ text: textToSpeak, time: now });
-        
+
         // Keep only last 3 speeches for memory efficiency
         if (mobileRecentSpeeches.length > 3) {
             mobileRecentSpeeches = mobileRecentSpeeches.slice(-3);
         }
-        
+
         // Block further speeches temporarily
         mobileSpeechBlocked = true;
-        
+
         // Unblock after 3 seconds
         setTimeout(() => {
             mobileSpeechBlocked = false;
@@ -649,7 +730,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Text-to-speech functionality with mobile/desktop separation
     document.getElementById('speak').addEventListener('click', debounce(function() {
         const speakButton = this;
-        
+
         // Prevent processing if already processing
         if (speakButton.getAttribute('data-processing') === 'true') {
             console.log('Button already processing, ignoring click');
@@ -665,9 +746,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function handleMobileSpeech(button) {
         console.log('Mobile: Speech button clicked');
-        
+
         const textToSpeak = textArea.value.trim();
-        
+
         // Early validation
         if (!textToSpeak) {
             showStatus('Nothing to speak. Please record or type some text first.', true);
@@ -702,16 +783,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Record this speech attempt
         recordMobileSpeech(textToSpeak);
-        
+
         // Start speech
         startSpeech(button, textToSpeak, true);
     }
 
     function handleDesktopSpeech(button) {
         console.log('Desktop: Speech button clicked');
-        
+
         const textToSpeak = textArea.value.trim();
-        
+
         // Early validation
         if (!textToSpeak) {
             showStatus('Nothing to speak. Please record or type some text first.', true);
@@ -740,14 +821,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function startSpeech(button, textToSpeak, isMobileDevice) {
         console.log(isMobileDevice ? 'Mobile' : 'Desktop', ': Starting speech synthesis');
-        
+
         button.setAttribute('data-processing', 'true');
         animateButton(button);
 
         try {
             // Clean up any existing speech first
             window.speechSynthesis.cancel();
-            
+
             // Update button state
             button.innerHTML = '<i class="fas fa-stop"></i>Stop';
             button.style.background = 'var(--danger)';
@@ -778,7 +859,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentSpeech = null;
                 resetSpeakButton(button);
                 showStatus('Finished speaking');
-                
+
                 // Remove processing flag with delay for mobile
                 setTimeout(() => {
                     button.removeAttribute('data-processing');
@@ -791,7 +872,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentSpeech = null;
                 resetSpeakButton(button);
                 showStatus('Error while speaking: ' + (event.error || 'Unknown error'), true);
-                
+
                 setTimeout(() => {
                     button.removeAttribute('data-processing');
                 }, isMobileDevice ? 1000 : 100);
@@ -806,7 +887,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 window.speechSynthesis.speak(utterance);
             }
-            
+
         } catch (error) {
             console.error((isMobileDevice ? 'Mobile' : 'Desktop') + ': Error creating speech:', error);
             resetSpeakButton(button);
@@ -887,21 +968,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update UI
         document.getElementById('voice-speed').value = userSettings.voiceSpeed;
         document.getElementById('voice-speed').nextElementSibling.textContent = userSettings.voiceSpeed.toFixed(1);
-        
+
         document.getElementById('voice-pitch').value = userSettings.voicePitch;
         document.getElementById('voice-pitch').nextElementSibling.textContent = userSettings.voicePitch.toFixed(1);
-        
+
         document.getElementById('voice-select').value = userSettings.selectedVoice;
         document.getElementById('dark-mode-toggle').checked = userSettings.darkMode;
-        
+
         // Remove dark mode if currently active
         if (document.body.classList.contains('dark-mode')) {
             document.body.classList.remove('dark-mode');
         }
-        
+
         // Save the reset settings
         saveUserSettings();
-        
+
         // Show confirmation
         showStatus('Settings reset to defaults');
         showAnimatedMessage('Settings reset!', 'undo', 2000);
@@ -911,7 +992,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('voice-select').addEventListener('change', function() {
         userSettings.selectedVoice = this.value;
         saveUserSettings();
-        
+
         // Test the selected voice if there's text in the textarea
         if (textArea.value.trim()) {
             showStatus('Voice selection updated');
@@ -922,10 +1003,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function populateVoiceOptions() {
         const voiceSelect = document.getElementById('voice-select');
         const voices = window.speechSynthesis.getVoices();
-        
+
         // Clear existing options except the default
         voiceSelect.innerHTML = '<option value="">Default Voice</option>';
-        
+
         // Add voice options
         voices.forEach(voice => {
             const option = document.createElement('option');
@@ -936,7 +1017,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             voiceSelect.appendChild(option);
         });
-        
+
         // Set the current selected voice
         voiceSelect.value = userSettings.selectedVoice;
     }
@@ -955,39 +1036,39 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault();
             document.getElementById('speak').click();
         }
-        
+
         // Ctrl/Cmd + R to record (but prevent browser refresh)
         if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
             event.preventDefault();
             document.getElementById('activate-mic').click();
         }
-        
+
         // Ctrl/Cmd + S to save
         if ((event.ctrlKey || event.metaKey) && event.key === 's') {
             event.preventDefault();
             document.getElementById('save').click();
         }
-        
+
         // Escape to close dialogs
         if (event.key === 'Escape') {
             // Close settings panel
             if (settingsPanel.classList.contains('active')) {
                 closeSettingsPanel();
             }
-            
+
             // Close confirmation dialogs
             const confirmationDialog = document.getElementById('clear-confirmation');
             const filenameDialog = document.getElementById('filename-dialog');
-            
+
             if (confirmationDialog.classList.contains('active')) {
                 confirmationDialog.classList.remove('active');
             }
-            
+
             if (filenameDialog.classList.contains('active')) {
                 filenameDialog.classList.remove('active');
             }
         }
-        
+
         // Shift + D for debug info
         if (event.shiftKey && event.key === 'D') {
             showDebugInfo();
@@ -1006,13 +1087,13 @@ document.addEventListener('DOMContentLoaded', function() {
             browserLanguage: navigator.language,
             platform: navigator.platform
         };
-        
+
         console.log('Debug Information:', debugInfo);
-        
+
         const debugText = Object.entries(debugInfo)
             .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
             .join('\n');
-            
+
         // Create temporary textarea with debug info
         const debugTextarea = document.createElement('textarea');
         debugTextarea.value = debugText;
@@ -1029,24 +1110,24 @@ document.addEventListener('DOMContentLoaded', function() {
         debugTextarea.style.fontSize = '12px';
         debugTextarea.style.fontFamily = 'monospace';
         debugTextarea.readOnly = true;
-        
+
         document.body.appendChild(debugTextarea);
         debugTextarea.focus();
         debugTextarea.select();
-        
+
         // Remove debug textarea after 10 seconds or on click outside
         setTimeout(() => {
             if (debugTextarea.parentNode) {
                 debugTextarea.parentNode.removeChild(debugTextarea);
             }
         }, 10000);
-        
+
         debugTextarea.addEventListener('blur', () => {
             if (debugTextarea.parentNode) {
                 debugTextarea.parentNode.removeChild(debugTextarea);
             }
         });
-        
+
         showStatus('Debug info displayed (Shift+D)', false);
     }
 
@@ -1061,7 +1142,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const speakButton = document.getElementById('speak');
                 resetSpeakButton(speakButton);
             }
-            
+
             // Stop speech recognition if active
             if (recognition && recognition._isListening) {
                 recognition._isListening = false;
@@ -1082,7 +1163,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (speechSynthesisActive) {
             window.speechSynthesis.cancel();
         }
-        
+
         // Stop speech recognition
         if (recognition && recognition._isListening) {
             try {
@@ -1096,26 +1177,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize app state
     function initializeApp() {
         console.log('Initializing Speechify app...');
-        
-        // Show welcome message
-        setTimeout(() => {
-            showStatus('Welcome to Speechify! Click Record to start speaking or type text to use speech synthesis.');
-        }, 1000);
-        
+
         // Auto-focus textarea on desktop
         if (!isMobile) {
             setTimeout(() => {
                 textArea.focus();
             }, 1500);
         }
-        
+
         // Check for saved text in localStorage as backup
         const savedText = localStorage.getItem('speechify-backup-text');
         if (savedText && !textArea.value.trim()) {
             textArea.value = savedText;
             showStatus('Restored previous session text');
         }
-        
+
         console.log('Speechify app initialized successfully');
     }
 
@@ -1143,7 +1219,13 @@ document.addEventListener('DOMContentLoaded', function() {
         showStatus,
         userSettings,
         speechRecognitionSupported,
-        isMobile
+        isMobile,
+        // Mobile-specific debug info
+        mobileRecognitionCooldown,
+        mobileRecentTranscripts,
+        mobileLastRecognitionTime,
+        canAddMobileTranscript,
+        recordMobileTranscript
     };
 
     console.log('Enhanced Speechify script loaded successfully');
