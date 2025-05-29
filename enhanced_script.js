@@ -49,11 +49,13 @@ document.addEventListener('DOMContentLoaded', function() {    // Initialize vari
         }
     }    // Detect if device is mobile
     const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Mobile-specific global protection
+    let mobileLastSpeechTime = 0;
+    let mobileRecentSpeeches = [];
       // Mobile-specific: Add global speech synthesis monitoring
     if (isMobile) {
-        console.log('Mobile device detected - enabling enhanced speech protection');
-        
-        // Force cleanup function for mobile devices
+        console.log('Mobile device detected - enabling enhanced speech protection');        // Force cleanup function for mobile devices
         window.forceSpeechCleanup = () => {
             console.log('Mobile: Force cleanup initiated');
             try {
@@ -61,12 +63,16 @@ document.addEventListener('DOMContentLoaded', function() {    // Initialize vari
                 speechSynthesisActive = false;
                 currentSpeech = null;
                 
+                // Clear mobile tracking
+                mobileLastSpeechTime = 0;
+                mobileRecentSpeeches = [];
+                
                 const speakBtn = document.getElementById('speak');
                 if (speakBtn) {
                     speakBtn.innerHTML = '<i class="fas fa-volume-up"></i>Speak';
                     speakBtn.style.background = 'var(--success)';
                     speakBtn.removeAttribute('data-processing');
-                    speakBtn.removeAttribute('data-mobile-cooldown');
+                    speakBtn.removeAttribute('data-mobile-blocked');
                 }
                 console.log('Mobile: Force cleanup completed');
             } catch (e) {
@@ -109,11 +115,38 @@ document.addEventListener('DOMContentLoaded', function() {    // Initialize vari
                 tapCount = 0;
             }, 1000);
         });
-    }
-
-    // Add a class to body for mobile-specific styling if needed
+    }    // Add a class to body for mobile-specific styling if needed
     if (isMobile) {
         document.body.classList.add('mobile-device');
+        
+        // Add mobile-specific styles for protected states
+        const style = document.createElement('style');
+        style.textContent = `
+            .mobile-device #speak[data-mobile-blocked] {
+                opacity: 0.6 !important;
+                cursor: not-allowed !important;
+                position: relative;
+            }
+            
+            .mobile-device #speak[data-mobile-blocked]::after {
+                content: "⏳";
+                position: absolute;
+                top: 50%;
+                right: 8px;
+                transform: translateY(-50%);
+                font-size: 14px;
+            }
+            
+            .mobile-device #speak[data-processing] {
+                animation: mobileProcessing 1s infinite alternate;
+            }
+            
+            @keyframes mobileProcessing {
+                0% { box-shadow: 0 0 5px rgba(220, 38, 38, 0.3); }
+                100% { box-shadow: 0 0 15px rgba(220, 38, 38, 0.7); }
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     // User settings with defaults
@@ -545,109 +578,148 @@ document.addEventListener('DOMContentLoaded', function() {    // Initialize vari
                 resetMicButton();
                 micButton.removeAttribute('data-processing');
             });
-    }, 300)); // Same debounce time for all devices    // Function to convert text to speech with enhanced mobile protection
+    }, 300)); // Same debounce time for all devices    // Function to convert text to speech - Completely separate mobile and PC handling
     document.getElementById('speak').addEventListener('click', debounce(function() {
         const speakButton = this;
 
-        // Enhanced mobile protection against speech repetition
         if (isMobile) {
-            // Check for active cooldown period
-            if (speakButton.hasAttribute('data-mobile-cooldown')) {
-                console.log('Mobile: Button in cooldown period, ignoring click');
+            // MOBILE-ONLY HANDLER: Aggressive protection against repetition
+            handleMobileSpeech(speakButton);
+        } else {
+            // PC-ONLY HANDLER: Standard behavior
+            handleDesktopSpeech(speakButton);
+        }        // Mobile speech handler with maximum protection
+        function handleMobileSpeech(button) {
+            console.log('Mobile: Speech button clicked');
+            
+            const now = Date.now();
+            const textToSpeak = textArea.value.trim();
+              // Advanced mobile protection: Check for recent identical speech requests
+            if (now - mobileLastSpeechTime < 3000) { // 3 second minimum interval
+                console.log('Mobile: Too soon since last speech, ignoring');
+                showStatus('Please wait before speaking again (mobile protection)');
+                // Add visual feedback
+                button.style.opacity = '0.5';
+                setTimeout(() => {
+                    button.style.opacity = '1';
+                }, 1000);
                 return;
             }
             
-            // Check for any active speech synthesis (more comprehensive check)
+            // Check for duplicate text in recent speeches
+            const isDuplicate = mobileRecentSpeeches.some(recent => 
+                recent.text === textToSpeak && (now - recent.time) < 10000 // 10 seconds
+            );
+            
+            if (isDuplicate) {
+                console.log('Mobile: Duplicate speech detected, ignoring');
+                showStatus('Same text was recently spoken (mobile protection)');
+                // Add visual feedback
+                button.style.opacity = '0.5';
+                setTimeout(() => {
+                    button.style.opacity = '1';
+                }, 1000);
+                return;
+            }
+            
+            // Multiple layers of protection
+            if (button.hasAttribute('data-mobile-blocked')) {
+                console.log('Mobile: Button is blocked, ignoring click');
+                return;
+            }
+            
+            if (button.hasAttribute('data-processing')) {
+                console.log('Mobile: Button is processing, ignoring click');
+                return;
+            }
+            
+            // Force stop any existing speech immediately
             if (window.speechSynthesis.speaking || window.speechSynthesis.pending || speechSynthesisActive) {
-                console.log('Mobile: Speech synthesis is active, stopping all speech');
+                console.log('Mobile: Stopping existing speech');
                 window.speechSynthesis.cancel();
                 speechSynthesisActive = false;
                 currentSpeech = null;
-                
-                // Reset button state
-                speakButton.innerHTML = '<i class="fas fa-volume-up"></i>Speak';
-                speakButton.style.background = 'var(--success)';
-                speakButton.removeAttribute('data-processing');
+                resetSpeakButton(button);
                 showStatus('Speech stopped');
                 return;
             }
             
-            // Set extended mobile cooldown
-            speakButton.setAttribute('data-mobile-cooldown', 'true');
+            // Record this speech attempt
+            mobileLastSpeechTime = now;
+            mobileRecentSpeeches.push({ text: textToSpeak, time: now });
+            
+            // Keep only recent speeches (last 10 entries)
+            if (mobileRecentSpeeches.length > 10) {
+                mobileRecentSpeeches = mobileRecentSpeeches.slice(-10);
+            }
+              // Block button for 3 seconds to prevent rapid firing
+            button.setAttribute('data-mobile-blocked', 'true');
+            button.setAttribute('data-processing', 'true');
+            
+            // Show mobile protection status
+            showStatus('Mobile protection: Starting speech...', false);
+            
             setTimeout(() => {
-                speakButton.removeAttribute('data-mobile-cooldown');
-            }, 1000); // Extended to 1 second for better protection
+                button.removeAttribute('data-mobile-blocked');
+                console.log('Mobile: Button unblocked after cooldown');
+            }, 3000);
+            
+            startMobileSpeech(button);
         }
         
-        // Prevent multiple rapid clicks (universal protection)
-        if (speakButton.getAttribute('data-processing') === 'true') {
-            console.log('Button is processing, ignoring click');
-            return;
+        // Desktop speech handler - standard behavior
+        function handleDesktopSpeech(button) {
+            console.log('Desktop: Speech button clicked');
+            
+            if (button.getAttribute('data-processing') === 'true') {
+                console.log('Desktop: Button is processing, ignoring click');
+                return;
+            }
+            
+            // Stop current speech if active
+            if (speechSynthesisActive) {
+                console.log('Desktop: Stopping current speech synthesis');
+                window.speechSynthesis.cancel();
+                speechSynthesisActive = false;
+                resetSpeakButton(button);
+                return;
+            }
+            
+            startDesktopSpeech(button);
         }
-
-        startSpeechProcess();        function startSpeechProcess() {
-            animateButton(speakButton);
-            speakButton.setAttribute('data-processing', 'true');
-
-            // Check if there's text to speak
+        
+        // Mobile-specific speech function
+        function startMobileSpeech(button) {
+            animateButton(button);
+            
             const textToSpeak = textArea.value.trim();
             if (!textToSpeak) {
                 showStatus('Nothing to speak. Please record or type some text first.', true);
-                speakButton.removeAttribute('data-processing');
+                resetSpeakButton(button);
                 return;
             }
 
-            // Check if speech synthesis is supported
             if (!('speechSynthesis' in window)) {
                 showStatus('Text-to-speech is not supported in your browser.', true);
-                speakButton.removeAttribute('data-processing');
+                resetSpeakButton(button);
                 return;
             }
 
-            // Enhanced mobile check: Force stop any existing speech
-            if (isMobile) {
-                // Comprehensive cleanup for mobile devices
-                if (window.speechSynthesis.speaking || window.speechSynthesis.pending || speechSynthesisActive) {
-                    console.log('Mobile: Force stopping all speech synthesis');
-                    window.speechSynthesis.cancel();
-                    speechSynthesisActive = false;
-                    currentSpeech = null;
-                    
-                    // Wait longer on mobile to ensure cleanup completes
-                    setTimeout(() => {
-                        speakButton.innerHTML = '<i class="fas fa-volume-up"></i>Speak';
-                        speakButton.style.background = 'var(--success)';
-                        speakButton.removeAttribute('data-processing');
-                        showStatus('Previous speech stopped. Click again to start new speech.');
-                    }, 300);
-                    return;
-                }
-            } else {
-                // PC: Standard behavior - stop current speech if active
-                if (speechSynthesisActive) {
-                    console.log('Stopping current speech synthesis');
-                    window.speechSynthesis.cancel();
-                    speechSynthesisActive = false;
-                    speakButton.innerHTML = '<i class="fas fa-volume-up"></i>Speak';
-                    speakButton.style.background = 'var(--success)';
-                    speakButton.removeAttribute('data-processing');
-                    return;
-                }
-            }
-
+            console.log('Mobile: Creating speech utterance');
+            
+            // Triple-check no speech is active
+            window.speechSynthesis.cancel();
+            speechSynthesisActive = false;
+            currentSpeech = null;
+            
             try {
-                // Change button appearance to stop
-                speakButton.innerHTML = '<i class="fas fa-stop"></i>Stop';
-                speakButton.style.background = 'var(--danger)';
+                button.innerHTML = '<i class="fas fa-stop"></i>Stop';
+                button.style.background = 'var(--danger)';
 
-                // Create utterance
                 const utterance = new SpeechSynthesisUtterance(textToSpeak);
-
-                // Set utterance properties from settings
                 utterance.rate = userSettings.voiceSpeed;
                 utterance.pitch = userSettings.voicePitch;
 
-                // Set selected voice if saved in settings
                 if (userSettings.selectedVoice) {
                     const voices = window.speechSynthesis.getVoices();
                     const selectedVoice = voices.find(voice => voice.voiceURI === userSettings.selectedVoice);
@@ -656,85 +728,134 @@ document.addEventListener('DOMContentLoaded', function() {    // Initialize vari
                     }
                 }
 
-                // Set up event handlers with enhanced mobile protection
                 utterance.onstart = () => {
-                    console.log('Speech synthesis started');
+                    console.log('Mobile: Speech started');
                     speechSynthesisActive = true;
-                    showStatus('Speaking text...');
                     currentSpeech = utterance;
+                    showStatus('Speaking text...');
                 };
 
                 utterance.onend = () => {
-                    console.log('Speech synthesis ended');
+                    console.log('Mobile: Speech ended');
                     speechSynthesisActive = false;
-                    speakButton.innerHTML = '<i class="fas fa-volume-up"></i>Speak';
-                    speakButton.style.background = 'var(--success)';
                     currentSpeech = null;
+                    resetSpeakButton(button);
                     showStatus('Finished speaking');
                     
-                    // Enhanced mobile protection: Longer delay before removing processing flag
-                    if (isMobile) {
-                        setTimeout(() => {
-                            speakButton.removeAttribute('data-processing');
-                            console.log('Mobile: Processing flag removed after speech end');
-                        }, 400); // Increased delay for mobile
-                    } else {
-                        speakButton.removeAttribute('data-processing');
-                    }
+                    // Extended delay before allowing next speech on mobile
+                    setTimeout(() => {
+                        button.removeAttribute('data-processing');
+                        console.log('Mobile: Button re-enabled after speech end');
+                    }, 1000);
                 };
 
                 utterance.onerror = (event) => {
-                    console.error('Speech synthesis error:', event);
-                    showStatus('Error while speaking: ' + (event.error || 'Unknown error'), true);
+                    console.error('Mobile: Speech error:', event);
                     speechSynthesisActive = false;
-                    speakButton.innerHTML = '<i class="fas fa-volume-up"></i>Speak';
-                    speakButton.style.background = 'var(--success)';
                     currentSpeech = null;
+                    resetSpeakButton(button);
+                    showStatus('Error while speaking: ' + (event.error || 'Unknown error'), true);
                     
-                    // Enhanced mobile protection: Longer delay on error as well
-                    if (isMobile) {
-                        setTimeout(() => {
-                            speakButton.removeAttribute('data-processing');
-                            console.log('Mobile: Processing flag removed after error');
-                        }, 400);
-                    } else {
-                        speakButton.removeAttribute('data-processing');
-                    }
+                    setTimeout(() => {
+                        button.removeAttribute('data-processing');
+                        console.log('Mobile: Button re-enabled after error');
+                    }, 1000);
                 };
 
-                // Enhanced mobile speech synthesis start
-                if (isMobile) {
-                    // Mobile: Extra verification before speaking
-                    console.log('Mobile: Starting speech synthesis with extra checks');
-                    
-                    // Final check for any lingering speech
+                // Force one final check and cleanup before speaking
+                setTimeout(() => {
                     if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-                        console.log('Mobile: Final cleanup - canceling existing speech');
+                        console.log('Mobile: Final cleanup before speech');
                         window.speechSynthesis.cancel();
-                        
-                        // Wait before starting new speech
-                        setTimeout(() => {
-                            console.log('Mobile: Starting speech after cleanup delay');
-                            window.speechSynthesis.speak(utterance);
-                        }, 200);
-                    } else {
-                        console.log('Mobile: Starting speech immediately - no existing speech detected');
-                        window.speechSynthesis.speak(utterance);
                     }
-                } else {
-                    // PC: Start speaking immediately
-                    window.speechSynthesis.speak(utterance);
-                }
+                    
+                    setTimeout(() => {
+                        console.log('Mobile: Starting speech after final checks');
+                        window.speechSynthesis.speak(utterance);
+                    }, 100);
+                }, 50);
                 
             } catch (error) {
-                console.error('Error using speech synthesis:', error);
+                console.error('Mobile: Error creating speech:', error);
+                resetSpeakButton(button);
                 showStatus('Error using text-to-speech: ' + error.message, true);
-                speakButton.innerHTML = '<i class="fas fa-volume-up"></i>Speak';
-                speakButton.style.background = 'var(--success)';
-                speakButton.removeAttribute('data-processing');
             }
         }
-    }, isMobile ? 800 : 300)); // Much longer debounce for mobile (800ms vs 300ms)
+        
+        // Desktop-specific speech function  
+        function startDesktopSpeech(button) {
+            animateButton(button);
+            button.setAttribute('data-processing', 'true');
+            
+            const textToSpeak = textArea.value.trim();
+            if (!textToSpeak) {
+                showStatus('Nothing to speak. Please record or type some text first.', true);
+                button.removeAttribute('data-processing');
+                return;
+            }
+
+            if (!('speechSynthesis' in window)) {
+                showStatus('Text-to-speech is not supported in your browser.', true);
+                button.removeAttribute('data-processing');
+                return;
+            }
+
+            try {
+                button.innerHTML = '<i class="fas fa-stop"></i>Stop';
+                button.style.background = 'var(--danger)';
+
+                const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                utterance.rate = userSettings.voiceSpeed;
+                utterance.pitch = userSettings.voicePitch;
+
+                if (userSettings.selectedVoice) {
+                    const voices = window.speechSynthesis.getVoices();
+                    const selectedVoice = voices.find(voice => voice.voiceURI === userSettings.selectedVoice);
+                    if (selectedVoice) {
+                        utterance.voice = selectedVoice;
+                    }
+                }
+
+                utterance.onstart = () => {
+                    console.log('Desktop: Speech started');
+                    speechSynthesisActive = true;
+                    currentSpeech = utterance;
+                    showStatus('Speaking text...');
+                };
+
+                utterance.onend = () => {
+                    console.log('Desktop: Speech ended');
+                    speechSynthesisActive = false;
+                    currentSpeech = null;
+                    resetSpeakButton(button);
+                    showStatus('Finished speaking');
+                    button.removeAttribute('data-processing');
+                };
+
+                utterance.onerror = (event) => {
+                    console.error('Desktop: Speech error:', event);
+                    speechSynthesisActive = false;
+                    currentSpeech = null;
+                    resetSpeakButton(button);
+                    showStatus('Error while speaking: ' + (event.error || 'Unknown error'), true);
+                    button.removeAttribute('data-processing');
+                };
+
+                window.speechSynthesis.speak(utterance);
+                
+            } catch (error) {
+                console.error('Desktop: Error creating speech:', error);
+                resetSpeakButton(button);
+                showStatus('Error using text-to-speech: ' + error.message, true);
+                button.removeAttribute('data-processing');
+            }
+        }
+        
+        // Helper function to reset speak button
+        function resetSpeakButton(button) {
+            button.innerHTML = '<i class="fas fa-volume-up"></i>Speak';
+            button.style.background = 'var(--success)';
+        }    }, isMobile ? 1500 : 300)); // Much longer debounce for mobile (1.5s vs 300ms)
 
     // Settings panel functionality
     const settingsButton = document.getElementById('settings-toggle');
