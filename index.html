@@ -480,19 +480,43 @@
             0% { transform: scale(1); }
             50% { transform: scale(1.03); }
             100% { transform: scale(1); }
-        }
-
-        /* Specific mobile optimized animations */
+        }        /* Mobile-specific optimizations to prevent accidental double-taps */
         @media (max-width: 768px) {
+            /* Reduce animation intensity on mobile to prevent visual feedback that encourages multiple taps */
             @keyframes buttonPulse {
                 0% { opacity: 1; transform: scale(1); }
-                50% { opacity: 0.8; transform: scale(1.02); }
+                50% { opacity: 0.9; transform: scale(1.01); }
                 100% { opacity: 1; transform: scale(1); }
             }
 
             @keyframes pulse {
                 from { transform: scale(1); }
-                to { transform: scale(1.03); }
+                to { transform: scale(1.02); }
+            }
+
+            /* Add touch-specific delay for speech button to prevent repetition */
+            #speak {
+                -webkit-tap-highlight-color: transparent;
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+                pointer-events: auto;
+            }
+
+            /* Prevent multiple rapid taps by adding a slight delay on active state */
+            #speak:active {
+                transform: scale(0.98) translateZ(0);
+                transition: transform 0.1s ease;
+            }
+
+            /* Ensure button processing state is visually distinct on mobile */
+            #speak[data-processing="true"] {
+                opacity: 0.7;
+                pointer-events: none;
+                transform: scale(0.98);
             }
         }
 
