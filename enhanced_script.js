@@ -594,21 +594,33 @@ document.addEventListener('DOMContentLoaded', function() {    // Initialize vari
             
             const now = Date.now();
             const textToSpeak = textArea.value.trim();
-              // Advanced mobile protection: Check for recent identical speech requests
-            if (now - mobileLastSpeechTime < 3000) { // 3 second minimum interval
+            
+            // CRITICAL: First check if any speech activity is already happening
+            if (window.speechSynthesis.speaking || window.speechSynthesis.pending || speechSynthesisActive) {
+                console.log('Mobile: Critical protection - Speech already active, cancelling and blocking');
+                window.speechSynthesis.cancel();
+                speechSynthesisActive = false;
+                currentSpeech = null;
+                resetSpeakButton(button);
+                showStatus('Speech stopped (mobile protection)');
+                return;
+            }
+            
+            // Enhanced time-based protection: 4+ second minimum interval
+            if (now - mobileLastSpeechTime < 4000) { 
                 console.log('Mobile: Too soon since last speech, ignoring');
                 showStatus('Please wait before speaking again (mobile protection)');
                 // Add visual feedback
                 button.style.opacity = '0.5';
                 setTimeout(() => {
                     button.style.opacity = '1';
-                }, 1000);
+                }, 1500);
                 return;
             }
             
-            // Check for duplicate text in recent speeches
+            // Extended duplicate protection: Check last 5 speeches within 30 seconds
             const isDuplicate = mobileRecentSpeeches.some(recent => 
-                recent.text === textToSpeak && (now - recent.time) < 10000 // 10 seconds
+                recent.text === textToSpeak && (now - recent.time) < 30000 // 30 seconds
             );
             
             if (isDuplicate) {
@@ -618,7 +630,7 @@ document.addEventListener('DOMContentLoaded', function() {    // Initialize vari
                 button.style.opacity = '0.5';
                 setTimeout(() => {
                     button.style.opacity = '1';
-                }, 1000);
+                }, 1500);
                 return;
             }
             
@@ -633,26 +645,16 @@ document.addEventListener('DOMContentLoaded', function() {    // Initialize vari
                 return;
             }
             
-            // Force stop any existing speech immediately
-            if (window.speechSynthesis.speaking || window.speechSynthesis.pending || speechSynthesisActive) {
-                console.log('Mobile: Stopping existing speech');
-                window.speechSynthesis.cancel();
-                speechSynthesisActive = false;
-                currentSpeech = null;
-                resetSpeakButton(button);
-                showStatus('Speech stopped');
-                return;
-            }
-            
             // Record this speech attempt
             mobileLastSpeechTime = now;
             mobileRecentSpeeches.push({ text: textToSpeak, time: now });
             
-            // Keep only recent speeches (last 10 entries)
-            if (mobileRecentSpeeches.length > 10) {
-                mobileRecentSpeeches = mobileRecentSpeeches.slice(-10);
+            // Keep only last 5 speeches for memory efficiency
+            if (mobileRecentSpeeches.length > 5) {
+                mobileRecentSpeeches = mobileRecentSpeeches.slice(-5);
             }
-              // Block button for 3 seconds to prevent rapid firing
+            
+            // Block button for 4 seconds to prevent rapid firing
             button.setAttribute('data-mobile-blocked', 'true');
             button.setAttribute('data-processing', 'true');
             
@@ -662,7 +664,7 @@ document.addEventListener('DOMContentLoaded', function() {    // Initialize vari
             setTimeout(() => {
                 button.removeAttribute('data-mobile-blocked');
                 console.log('Mobile: Button unblocked after cooldown');
-            }, 3000);
+            }, 4000);
             
             startMobileSpeech(button);
         }
@@ -855,7 +857,7 @@ document.addEventListener('DOMContentLoaded', function() {    // Initialize vari
         function resetSpeakButton(button) {
             button.innerHTML = '<i class="fas fa-volume-up"></i>Speak';
             button.style.background = 'var(--success)';
-        }    }, isMobile ? 1500 : 300)); // Much longer debounce for mobile (1.5s vs 300ms)
+        }    }, isMobile ? 2000 : 300)); // 2 second debounce for mobile vs 300ms for desktop
 
     // Settings panel functionality
     const settingsButton = document.getElementById('settings-toggle');
