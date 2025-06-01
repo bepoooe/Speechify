@@ -1,6 +1,6 @@
 # 🎤 Speechify - Voice Processing Web Application
 
-Speechify is a cutting-edge web application that provides powerful speech-to-text and text-to-speech capabilities with an elegant, responsive interface. Built with modern web technologies, it delivers a seamless voice processing experience across all devices.
+Speechify is a simple web application that provides powerful speech-to-text and text-to-speech capabilities with an elegant, responsive interface. Built with modern web technologies, it delivers a seamless voice processing experience across all devices.
 
 ## 🚀 Live Demo
 
