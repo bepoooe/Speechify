@@ -1,6 +1,6 @@
-# 🎤 Speechify - Voice Processing Web Application
+# Speechify - Voice Processing Web Application
 
-Speechify is a simple web application that provides powerful speech-to-text and text-to-speech capabilities with an elegant, responsive interface. Built with modern web technologies, it delivers a seamless voice processing experience across all devices.
+Speechify is a simple web application that provides speech-to-text and text-to-speech capabilities with an elegant, responsive interface. Built with modern web technologies, it delivers a seamless voice processing experience across all devices.
 
 ## 🚀 Live Demo
 
@@ -176,14 +176,3 @@ We welcome contributions! Here's how you can help:
 ## 📄 License
 
 This project is open source and available under the [MIT License](LICENSE).
-
-## 👨‍💻 Author
-
-Created by **bepoooe** - [GitHub Profile](https://github.com/bepoooe)
-
-## 🙏 Acknowledgments
-
-- Web Speech API for enabling browser-based speech recognition
-- Font Awesome for beautiful icons
-- Modern CSS techniques for responsive design
-- The open-source community for inspiration and tools
