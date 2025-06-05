@@ -152,7 +152,7 @@ This project is deployed on multiple platforms:
 3. Import the project and deploy
 
 #### Deploy to GitHub Pages
-1. Fork this repository
+1. Fork this repository 
 2. Go to Settings > Pages in your repository
 3. Select "Deploy from a branch" and choose `main`
 4. Your site will be available at `https://yourusername.github.io/Speechify/`
